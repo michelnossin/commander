@@ -1,5 +1,15 @@
 .Editor {
+  /*background-image: url('images/react-logo.svg');*/
+  /*background-color: yellow;*/
+  background-size: cover;
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+  width: 100%;
+}
+.Toolbar {
   /* background-image: url('images/react-logo.svg');*/
+  background-color: blue;
   background-size: cover;
   display: inline-block;
   height: 100%;
@@ -7,7 +17,10 @@
   width: 100%;
 }
 html {
-  background: white;
+  background: lemonchiffon;  /*lightyellow  lemonchiffon  */
   font: 16px Arial;
 }
 
+body {
+  margin: 0px;
+}

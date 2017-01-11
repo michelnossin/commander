@@ -1,5 +1,8 @@
 html {
-  background: white;
+  background: lemonchiffon;  /*lightyellow  lemonchiffon  */
   font: 16px Arial;
 }
 
+body {
+  margin: 0px;
+}

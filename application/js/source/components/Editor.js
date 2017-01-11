@@ -2,6 +2,14 @@ import React from 'react';
 import Line from './Line';
 import io from 'socket.io-client'
 let socket = io(`http://localhost`) //our server 192.168.0.105
+var bgColors = { "Default": "#81b71a",
+                    "Blue": "#00B1E1",
+                    "Cyan": "#37BC9B",
+                    "Green": "#8CC152",
+                    "Red": "#E9573F",
+                    "Yellow": "#F6BB42",
+};
+
 //let user = "user_" + Math.random().toString(36).substring(7); //Lets give the user a name, todo: let the user make this up
 //console.log("Client is using this name: " + user  );
 
@@ -94,7 +102,7 @@ class Editor extends React.Component {
     var username=""
 
     return (
-      <div className="Editor" >This is commander</div>
+      <div className="Editor">This is commander</div>
     );
 /*
     return (

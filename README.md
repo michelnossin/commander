@@ -33,6 +33,7 @@ npm install --save socket.io
 npm install --save react-keydown
 npm install --save-dev babel-preset-stage-1
 npm install --save babel-plugin-transform-decorators-legacy
+npm install react-simple-toolbar --save
 ```
 Notice we install socket.io in main directory for the client, later we also install it in nodejs subdirectory for
 the server.
