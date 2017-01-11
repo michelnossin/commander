@@ -7,14 +7,17 @@ import Toolbar from './components/Toolbar';
 
 //Our main application with have a toolbar and editor window
 let MyApp = React.createClass({
+  /*
   handleClick  (e) {
-
+    console.log("e.target is " + String(e.target) )
       if (ReactDOM.findDOMNode(this).contains(e.target)) {
           //clicked existing object
+          e.target.selectObject()
           return;
       }
       else {
         //New object
+        e.target.addObject()
       }
   },
   componentWillUnmount () {
@@ -24,7 +27,7 @@ let MyApp = React.createClass({
   //in the editor
   componentWillMount  () {
         document.addEventListener('click', this.handleClick, false);
-    },
+    },*/
 
     render() {
       return(

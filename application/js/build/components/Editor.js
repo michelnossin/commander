@@ -10,6 +10,10 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _reactDom = require('react-dom');
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
 var _Line = require('./Line');
 
 var _Line2 = _interopRequireDefault(_Line);
@@ -25,8 +29,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-//import ReactDOM from 'react-dom';
-
 
 var socket = (0, _socket2.default)('http://localhost'); //our server 192.168.0.105
 var bgColors = { "Default": "#81b71a",
@@ -50,10 +52,13 @@ var Editor = function (_React$Component) {
 
     _this.state = {
       //event_msg: {}, //message from server
-      //lines : []  //list of all non current lines
+      objects: [] //list of all non current lines
     };
 
     //this.sendMessage = this.sendMessage.bind(this)
+    _this.addObject = _this.addObject.bind(_this);
+    _this.selectObject = _this.selectObject.bind(_this);
+    _this.handleClick = _this.handleClick.bind(_this);
 
     //receive event from server
     socket.on('serverevent', function (ev_msg) {
@@ -70,34 +75,59 @@ var Editor = function (_React$Component) {
     return _this;
   }
 
-  //shouldComponentUpdate(nextProps, nextState) {
-  //  return false;
-  //}
-
-  //Call when windows resized.
-  /*
-  updateDimensions() {
-        let orgWidth = this.state.width
-        let orgHeight = this.state.height
-        console.log("Width and Height resize to " + String(window.innerWidth) + " and " + String(window.innerHeight)  );
-        let newWidth = window.innerWidth
-        let newHeight = window.innerHeight
-        //this.setState( { width :window.innerWidth, height: window.innerHeight })
-          var positions = Object.assign({},this.state.position)
-          Object.keys(positions).map((player,index) => {
-          positions[player].x1 = (newWidth/orgWidth) * positions[player].x1
-          positions[player].x2 = (newWidth/orgWidth) * positions[player].x2
-          positions[player].y1 = (newHeight/orgHeight) * positions[player].y1
-          positions[player].y2 = (newHeight/orgHeight) * positions[player].y2
-        })
-          this.setState( { position: positions , width :window.innerWidth, height: window.innerHeight})
-    }
-  */
-
-  //client set timer, at this moment only used to simulate key events
-
-
   _createClass(Editor, [{
+    key: 'handleClick',
+    value: function handleClick(e) {
+      console.log("e.target is " + String(e.target));
+      this.addObject();
+    }
+  }, {
+    key: 'componentWillMount',
+    value: function componentWillMount() {
+      var self = this;
+      document.addEventListener('click', self.handleClick, false);
+    }
+  }, {
+    key: 'addObject',
+    value: function addObject() {
+      console.log("ADDING OBJECT!");
+      this.state.objects.push("My text");
+      console.log("IS ADDED ,length " + String(this.state.objects.length));
+      this.forceUpdate();
+    }
+  }, {
+    key: 'selectObject',
+    value: function selectObject() {
+      console.log("SELECT OBJECT!");
+    }
+
+    //shouldComponentUpdate(nextProps, nextState) {
+    //  return false;
+    //}
+
+    //Call when windows resized.
+    /*
+    updateDimensions() {
+          let orgWidth = this.state.width
+          let orgHeight = this.state.height
+          console.log("Width and Height resize to " + String(window.innerWidth) + " and " + String(window.innerHeight)  );
+          let newWidth = window.innerWidth
+          let newHeight = window.innerHeight
+          //this.setState( { width :window.innerWidth, height: window.innerHeight })
+            var positions = Object.assign({},this.state.position)
+            Object.keys(positions).map((player,index) => {
+            positions[player].x1 = (newWidth/orgWidth) * positions[player].x1
+            positions[player].x2 = (newWidth/orgWidth) * positions[player].x2
+            positions[player].y1 = (newHeight/orgHeight) * positions[player].y1
+            positions[player].y2 = (newHeight/orgHeight) * positions[player].y2
+          })
+            this.setState( { position: positions , width :window.innerWidth, height: window.innerHeight})
+      }
+    */
+
+    //client set timer, at this moment only used to simulate key events
+
+  }, {
     key: 'componentDidMount',
     value: function componentDidMount() {
 
@@ -119,6 +149,7 @@ var Editor = function (_React$Component) {
     value: function componentWillUnmount() {
       console.log("Client with was disconnected ");
       window.removeEventListener("resize", this.updateDimensions);
+      document.removeEventListener('click', this.handleClick, false);
     }
 
     //Send event message to server, for example to let others know we change our line direction
@@ -132,15 +163,20 @@ var Editor = function (_React$Component) {
     key: 'render',
     value: function render() {
       var username = "";
+      console.log("Rendering with length " + String(this.state.objects.length));
 
       return _react2.default.createElement(
         'div',
         { className: 'Editor' },
-        _react2.default.createElement(
-          'button',
-          { type: 'button' },
-          'Click Me!'
-        )
+        this.state.objects.map(function (obj, index) {
+          return _react2.default.createElement(
+            'button',
+            { type: 'button' },
+            'Click Me ',
+            String(obj) + String(index),
+            '!'
+          );
+        })
       );
       /*
           return (
