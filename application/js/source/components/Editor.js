@@ -66,11 +66,6 @@ class Editor extends React.Component {
     }
 */
 
-  //Set current window size before starting
-  componentWillMount () {
-        //this.updateDimensions();
-    }
-
   //client set timer, at this moment only used to simulate key events
   componentDidMount()  {
 
@@ -89,9 +84,8 @@ class Editor extends React.Component {
   //remove any timers and listeners when client stops
   componentWillUnmount() {
     console.log("Client with was disconnected "  );
-    //window.removeEventListener("resize", this.updateDimensions);
+    window.removeEventListener("resize", this.updateDimensions);
   }
-
 
   //Send event message to server, for example to let others know we change our line direction
   sendMessage(message) {
@@ -102,7 +96,7 @@ class Editor extends React.Component {
     var username=""
 
     return (
-      <div className="Editor">This is commander</div>
+      <div className="Editor" ><button type="button">Click Me!</button></div>
     );
 /*
     return (

@@ -25,6 +25,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+//import ReactDOM from 'react-dom';
+
 
 var socket = (0, _socket2.default)('http://localhost'); //our server 192.168.0.105
 var bgColors = { "Default": "#81b71a",
@@ -92,18 +94,10 @@ var Editor = function (_React$Component) {
     }
   */
 
-  //Set current window size before starting
+  //client set timer, at this moment only used to simulate key events
 
 
   _createClass(Editor, [{
-    key: 'componentWillMount',
-    value: function componentWillMount() {}
-    //this.updateDimensions();
-
-
-    //client set timer, at this moment only used to simulate key events
-
-  }, {
     key: 'componentDidMount',
     value: function componentDidMount() {
 
@@ -124,7 +118,7 @@ var Editor = function (_React$Component) {
     key: 'componentWillUnmount',
     value: function componentWillUnmount() {
       console.log("Client with was disconnected ");
-      //window.removeEventListener("resize", this.updateDimensions);
+      window.removeEventListener("resize", this.updateDimensions);
     }
 
     //Send event message to server, for example to let others know we change our line direction
@@ -142,7 +136,11 @@ var Editor = function (_React$Component) {
       return _react2.default.createElement(
         'div',
         { className: 'Editor' },
-        'This is commander'
+        _react2.default.createElement(
+          'button',
+          { type: 'button' },
+          'Click Me!'
+        )
       );
       /*
           return (
