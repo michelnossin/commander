@@ -25,7 +25,7 @@ var server = http.createServer(app).listen(80, function(){
 require('./routes/socket_server.js').initialize(server);
 
 // frontend for the commander application, url: http://localhost/commander
-app.get('/commander', function(req, res) {
+app.get('/admiral', function(req, res) {
 
     app.use(express.static(__dirname + "\\.."));
     if (!req.files)

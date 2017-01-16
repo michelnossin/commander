@@ -78,7 +78,7 @@ var Editor = function (_React$Component) {
   _createClass(Editor, [{
     key: 'handleClick',
     value: function handleClick(e) {
-      console.log("e.target is " + String(e.target));
+      //console.log("e.target is " + String(e.target) )
       this.addObject();
     }
   }, {
@@ -90,15 +90,13 @@ var Editor = function (_React$Component) {
   }, {
     key: 'addObject',
     value: function addObject() {
-      console.log("ADDING OBJECT!");
       this.state.objects.push("My text");
-      console.log("IS ADDED ,length " + String(this.state.objects.length));
       this.forceUpdate();
     }
   }, {
     key: 'selectObject',
     value: function selectObject() {
-      console.log("SELECT OBJECT!");
+      return;
     }
 
     //shouldComponentUpdate(nextProps, nextState) {
