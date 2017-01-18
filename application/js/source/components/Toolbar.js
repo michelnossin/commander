@@ -27,11 +27,11 @@ class MyBar extends React.Component {
     return (
       <div className="Toolbar" >
         <Toolbar >
-            <Region>
-            <button><img src="/images/play.png" alt="Play, run this flow ongoing" onClick={this.myfunction} width="32" height="23" /></button>
-            <button><img src="/images/db.png" alt="Database, data source" onClick={this.myfunction} width="32" height="23" /></button>
-            <button><img src="/images/sink.png" alt="Sink, data target" onClick={this.myfunction} width="32" height="23" /></button>
-            <button><img src="/images/connect.png" alt="Connect, conncecting sources and sinks" onClick={this.myfunction} width="32" height="23" /></button>
+            <Region id="toolbar">
+            <button id="toolbar-play"><img src="/images/play.png" alt="Play, run this flow ongoing" onClick={this.myfunction} width="32" height="23" /></button>
+            <button id="toolbar-db"><img src="/images/db.png" alt="Database, data source" onClick={this.myfunction} width="32" height="23" /></button>
+            <button id="toolbar-sink"><img src="/images/sink.png" alt="Sink, data target" onClick={this.myfunction} width="32" height="23" /></button>
+            <button id="toolbar-connect"><img src="/images/connect.png" alt="Connect, conncecting sources and sinks" onClick={this.myfunction} width="32" height="23" /></button>
             </Region>
         </Toolbar>
       </div>

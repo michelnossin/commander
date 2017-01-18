@@ -59,25 +59,25 @@ var MyBar = function (_React$Component) {
           null,
           _react2.default.createElement(
             Region,
-            null,
+            { id: 'toolbar' },
             _react2.default.createElement(
               'button',
-              null,
+              { id: 'toolbar-play' },
               _react2.default.createElement('img', { src: '/images/play.png', alt: 'Play, run this flow ongoing', onClick: this.myfunction, width: '32', height: '23' })
             ),
             _react2.default.createElement(
               'button',
-              null,
+              { id: 'toolbar-db' },
               _react2.default.createElement('img', { src: '/images/db.png', alt: 'Database, data source', onClick: this.myfunction, width: '32', height: '23' })
             ),
             _react2.default.createElement(
               'button',
-              null,
+              { id: 'toolbar-sink' },
               _react2.default.createElement('img', { src: '/images/sink.png', alt: 'Sink, data target', onClick: this.myfunction, width: '32', height: '23' })
             ),
             _react2.default.createElement(
               'button',
-              null,
+              { id: 'toolbar-connect' },
               _react2.default.createElement('img', { src: '/images/connect.png', alt: 'Connect, conncecting sources and sinks', onClick: this.myfunction, width: '32', height: '23' })
             )
           )

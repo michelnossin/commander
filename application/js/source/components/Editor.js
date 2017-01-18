@@ -45,8 +45,12 @@ class Editor extends React.Component {
 
 
   handleClick  (e) {
-    //console.log("e.target is " + String(e.target) )
-    this.addObject()
+    //console.log("e.target is " + String(e.target.id) )
+    //Window.alert("click on " + e.target.id)
+    if (e.target.id == "toolbar")
+      return
+    else
+      this.addObject(e.clientX,e.clientY)
 
   }
 
@@ -55,8 +59,8 @@ class Editor extends React.Component {
         document.addEventListener('click', self.handleClick, false);
     }
 
-  addObject () {
-    this.state.objects.push("My text")
+  addObject (x,y) {
+    this.state.objects.push({ name: "My text " + x + " and " + y , x: x, y:y })
     this.forceUpdate()
   }
 
@@ -121,12 +125,13 @@ class Editor extends React.Component {
 
   render() {
     var username=""
-    console.log("Rendering with length " + String(this.state.objects.length))
+    //console.log("Rendering with length " + String(this.state.objects.length))
 
+//<button key={index} x={obj.x} y={obj.y} type="button">Click Me {String(obj.name) + String(index)}!</button>
     return (
-      <div className="Editor" >{
+      <div className="Editor" id="editor" >{
         this.state.objects.map((obj,index) => (
-          <button type="button">Click Me {String(obj) + String(index)}!</button>
+          <img style={{position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px', width: '50px' , height : '50px'}} src="images/play.png" />
         ))
       }</div>
     );

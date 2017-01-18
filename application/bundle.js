@@ -321,8 +321,9 @@ var Editor = function (_React$Component) {
   _createClass(Editor, [{
     key: 'handleClick',
     value: function handleClick(e) {
-      //console.log("e.target is " + String(e.target) )
-      this.addObject();
+      //console.log("e.target is " + String(e.target.id) )
+      //Window.alert("click on " + e.target.id)
+      if (e.target.id == "toolbar") return;else this.addObject(e.clientX, e.clientY);
     }
   }, {
     key: 'componentWillMount',
@@ -332,8 +333,8 @@ var Editor = function (_React$Component) {
     }
   }, {
     key: 'addObject',
-    value: function addObject() {
-      this.state.objects.push("My text");
+    value: function addObject(x, y) {
+      this.state.objects.push({ name: "My text " + x + " and " + y, x: x, y: y });
       this.forceUpdate();
     }
   }, {
@@ -404,19 +405,14 @@ var Editor = function (_React$Component) {
     key: 'render',
     value: function render() {
       var username = "";
-      console.log("Rendering with length " + String(this.state.objects.length));
+      //console.log("Rendering with length " + String(this.state.objects.length))
 
+      //<button key={index} x={obj.x} y={obj.y} type="button">Click Me {String(obj.name) + String(index)}!</button>
       return _react2.default.createElement(
         'div',
-        { className: 'Editor' },
+        { className: 'Editor', id: 'editor' },
         this.state.objects.map(function (obj, index) {
-          return _react2.default.createElement(
-            'button',
-            { type: 'button' },
-            'Click Me ',
-            String(obj) + String(index),
-            '!'
-          );
+          return _react2.default.createElement('img', { style: { position: "absolute", top: obj.y - 25 + 'px', left: obj.x - 25 + 'px', width: '50px', height: '50px' }, src: 'images/play.png' });
         })
       );
       /*
@@ -587,25 +583,25 @@ var MyBar = function (_React$Component) {
           null,
           _react2.default.createElement(
             Region,
-            null,
+            { id: 'toolbar' },
             _react2.default.createElement(
               'button',
-              null,
+              { id: 'toolbar-play' },
               _react2.default.createElement('img', { src: '/images/play.png', alt: 'Play, run this flow ongoing', onClick: this.myfunction, width: '32', height: '23' })
             ),
             _react2.default.createElement(
               'button',
-              null,
+              { id: 'toolbar-db' },
               _react2.default.createElement('img', { src: '/images/db.png', alt: 'Database, data source', onClick: this.myfunction, width: '32', height: '23' })
             ),
             _react2.default.createElement(
               'button',
-              null,
+              { id: 'toolbar-sink' },
               _react2.default.createElement('img', { src: '/images/sink.png', alt: 'Sink, data target', onClick: this.myfunction, width: '32', height: '23' })
             ),
             _react2.default.createElement(
               'button',
-              null,
+              { id: 'toolbar-connect' },
               _react2.default.createElement('img', { src: '/images/connect.png', alt: 'Connect, conncecting sources and sinks', onClick: this.myfunction, width: '32', height: '23' })
             )
           )
