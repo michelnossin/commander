@@ -52,6 +52,7 @@ var Editor = function (_React$Component) {
 
     _this.state = {
       //event_msg: {}, //message from server
+      mode: "",
       objects: [] //list of all non current lines
     };
 
@@ -75,16 +76,27 @@ var Editor = function (_React$Component) {
     return _this;
   }
 
+  //Mouse is clicked
+
+
   _createClass(Editor, [{
     key: 'handleClick',
     value: function handleClick(e) {
-      //console.log("e.target is " + String(e.target.id) )
-      //Window.alert("click on " + e.target.id)
+
+      //Toolbar click ignore
       if (e.target.id == "toolbar") return;
-      if (e.target.id == "toolbar-play-btn") {
-        console.log("Play mode activated");
-        return;
-      } else this.addObject(e.clientX, e.clientY);
+      //play mode
+      else if (e.target.id == "toolbar-play-img") {
+          return;
+        }
+        //Toolbar button changes mode
+        else if (e.target.id != "") {
+            //"toolbar-play-img"
+            this.setState({ mode: e.target.id });
+            return;
+          }
+          //Click in editor add object
+          else this.addObject(e.clientX, e.clientY);
     }
   }, {
     key: 'componentWillMount',
@@ -92,10 +104,13 @@ var Editor = function (_React$Component) {
       var self = this;
       document.addEventListener('click', self.handleClick, false);
     }
+
+    //Add object in Editor
+
   }, {
     key: 'addObject',
     value: function addObject(x, y) {
-      this.state.objects.push({ name: "My text " + x + " and " + y, x: x, y: y });
+      this.state.objects.push({ name: "Change this", x: x, y: y, objType: this.state.mode });
       this.forceUpdate();
     }
   }, {
@@ -166,14 +181,57 @@ var Editor = function (_React$Component) {
     key: 'render',
     value: function render() {
       var username = "";
-      //console.log("Rendering with length " + String(this.state.objects.length))
 
-      //<button key={index} x={obj.x} y={obj.y} type="button">Click Me {String(obj.name) + String(index)}!</button>
+      //util function Return image path based on obj type
+      var imageSrc = function imageSrc(objType) {
+        var result = void 0;
+        switch (objType) {
+          case "toolbar-play-img":
+            result = "images/play.png";
+            break;
+          case "toolbar-db-img":
+            result = "images/db.png";
+            break;
+          case "toolbar-sink-img":
+            result = "images/sink.png";
+            break;
+          case "toolbar-connect-img":
+            result = "images/connect.png";
+            break;
+        }
+        return result;
+      };
+
+      var textWidthPixels = function textWidthPixels(txt) {
+        // Create dummy span
+        var x = document.createElement('span');
+        // Set text
+        x.innerHTML = txt;
+        document.body.appendChild(x);
+        // Get width NOW, since the dummy span is about to be removed from the document
+        var w = x.offsetWidth;
+        // Cleanup
+        document.body.removeChild(x);
+        // All right, we're done
+        return w;
+      };
+
       return _react2.default.createElement(
         'div',
         { className: 'Editor', id: 'editor' },
         this.state.objects.map(function (obj, index) {
-          return _react2.default.createElement('img', { style: { position: "absolute", top: obj.y - 25 + 'px', left: obj.x - 25 + 'px', width: '50px', height: '50px' }, src: 'images/play.png' });
+          return _react2.default.createElement(
+            'div',
+            null,
+            _react2.default.createElement('img', { key: index, style: { position: "absolute", top: obj.y - 25 + 'px', left: obj.x - 25 + 'px',
+                width: '50px', height: '50px' },
+              src: imageSrc(obj.objType) }),
+            _react2.default.createElement(
+              'h4',
+              { style: { position: "absolute", top: obj.y + 25 + 'px', left: obj.x - textWidthPixels(obj.name) / 2 + 'px' } },
+              obj.name
+            )
+          );
         })
       );
       /*

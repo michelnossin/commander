@@ -21,6 +21,7 @@ class Editor extends React.Component {
 
     this.state = {
         //event_msg: {}, //message from server
+        mode : "",
         objects : []  //list of all non current lines
     };
 
@@ -43,19 +44,23 @@ class Editor extends React.Component {
     })
   }
 
-
+  //Mouse is clicked
   handleClick  (e) {
-    //console.log("e.target is " + String(e.target.id) )
-    //Window.alert("click on " + e.target.id)
+
+    //Toolbar click ignore
     if (e.target.id == "toolbar")
       return
-    if (e.target.id == "toolbar-play-img") {
-        console.log("Play mode activated")
+    //Toolbar button changes mode
+    else if (e.target.id != "") {
+       //"toolbar-play-img"
+        this.setState({mode: e.target.id})
         return
       }
-    else
-      this.addObject(e.clientX,e.clientY)
-
+    //Click in editor add object
+    else {
+      if (this.state.mode != "toolbar-play-img")
+        this.addObject(e.clientX,e.clientY)
+    }
   }
 
   componentWillMount  () {
@@ -63,8 +68,9 @@ class Editor extends React.Component {
         document.addEventListener('click', self.handleClick, false);
     }
 
+  //Add object in Editor
   addObject (x,y) {
-    this.state.objects.push({ name: "My text " + x + " and " + y , x: x, y:y })
+    this.state.objects.push({ name: "Change this" , x: x, y:y , objType : this.state.mode})
     this.forceUpdate()
   }
 
@@ -129,14 +135,55 @@ class Editor extends React.Component {
 
   render() {
     var username=""
-    //console.log("Rendering with length " + String(this.state.objects.length))
 
-//<button key={index} x={obj.x} y={obj.y} type="button">Click Me {String(obj.name) + String(index)}!</button>
+     //util function Return image path based on obj type
+     var imageSrc = function (objType) {
+       let result;
+       switch (objType) {
+         case "toolbar-play-img":
+            result = "images/play.png"
+            break;
+         case "toolbar-db-img":
+            result = "images/db.png"
+            break;
+          case "toolbar-sink-img":
+             result = "images/sink.png"
+             break;
+          case "toolbar-connect-img":
+             result = "images/connect.png"
+             break;
+        }
+        return result
+
+     }
+
+     //get pixel for text so we can add title on objects nicely centered
+     var textWidthPixels = function(txt){
+         // Create dummy span
+         let x = document.createElement('span');
+         // Set text
+         x.innerHTML = txt;
+         document.body.appendChild(x);
+         // Get width NOW, since the dummy span is about to be removed from the document
+         var w = x.offsetWidth;
+         // Cleanup
+         document.body.removeChild(x);
+         // All right, we're done
+         return w;
+ }
+
+
     return (
       <div className="Editor" id="editor" >{
         this.state.objects.map((obj,index) => (
-          <img style={{position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px', width: '50px' , height : '50px'}} src="images/play.png" />
+          <div>
+          <img key={index} style={{position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px',
+                           width: '50px' , height : '50px'}}
+                           src={imageSrc(obj.objType)} />
+          <h4 style={{position: "absolute", top: (obj.y + 25) + 'px', left: (obj.x - (textWidthPixels(obj.name) / 2)) + 'px'}}>{obj.name}</h4>
+          </div>
         ))
+
       }</div>
     );
 /*
