@@ -49,6 +49,10 @@ class Editor extends React.Component {
     //Window.alert("click on " + e.target.id)
     if (e.target.id == "toolbar")
       return
+    if (e.target.id == "toolbar-play-img") {
+        console.log("Play mode activated")
+        return
+      }
     else
       this.addObject(e.clientX,e.clientY)
 

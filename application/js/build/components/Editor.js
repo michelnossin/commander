@@ -80,7 +80,11 @@ var Editor = function (_React$Component) {
     value: function handleClick(e) {
       //console.log("e.target is " + String(e.target.id) )
       //Window.alert("click on " + e.target.id)
-      if (e.target.id == "toolbar") return;else this.addObject(e.clientX, e.clientY);
+      if (e.target.id == "toolbar") return;
+      if (e.target.id == "toolbar-play-btn") {
+        console.log("Play mode activated");
+        return;
+      } else this.addObject(e.clientX, e.clientY);
     }
   }, {
     key: 'componentWillMount',

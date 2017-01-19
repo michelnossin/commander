@@ -14,24 +14,58 @@ class MyBar extends React.Component {
 
   constructor(props) {
     super(props);
+    this.state = {
+      mode : ""
+    };
 
-    this.myfunction = this.myfunction.bind(this)
+    this.clickBtn = this.clickBtn.bind(this)
+
+    this.playBtn = this.playBtn.bind(this)
+    this.dbBtn = this.dbBtn.bind(this)
+    this.sinkBtn = this.sinkBtn.bind(this)
+    this.connectBtn = this.connectBtn.bind(this)
+
   }
 
-  myfunction() {
-        console.log("CLICKED");
+  //Click Toolbar button event lsnr
+  clickBtn(e) {
+
+        let mode = e.target.id
+        console.log("CLICKED " + mode);
+        this.setState( { mode: mode})
   }
 
-//style={{backgroundColor: bgColors.Blue}}
+  playBtn(){
+    if (this.state.mode == "toolbar-play-img")
+      return  <button style={{border: "5px"}} id="toolbar-play-btn"><img id="toolbar-play-img" src="/images/play.png" alt="Play, run this flow ongoing" onClick={this.clickBtn} width="32" height="23" /></button>
+    else
+      return  <button id="toolbar-play-btn"><img id="toolbar-play-img" src="/images/play.png" alt="Play, run this flow ongoing" onClick={this.clickBtn} width="32" height="23" /></button>
+  }
+  dbBtn(){
+    if (this.state.mode == "toolbar-db-img")
+      return  <button style={{border: "5px"}} id="toolbar-db-btn"><img id="toolbar-db-img" src="/images/db.png" alt="Database, data source" onClick={this.clickBtn} width="32" height="23" /></button>
+    else
+      return  <button id="toolbar-db-btn"><img id="toolbar-db-img" src="/images/db.png" alt="Database, data source" onClick={this.clickBtn} width="32" height="23" /></button>
+  }
+  sinkBtn(){
+    if (this.state.mode == "toolbar-sink-img")
+      return <button style={{border: "5px"}} id="toolbar-sink-btn"><img id="toolbar-sink-img" src="/images/sink.png" alt="Sink, data target" onClick={this.clickBtn} width="32" height="23" /></button>
+    else
+      return  <button id="toolbar-sink-btn"><img id="toolbar-sink-img" src="/images/sink.png" alt="Sink, data target" onClick={this.clickBtn} width="32" height="23" /></button>
+  }
+  connectBtn(){
+    if (this.state.mode == "toolbar-connect-img")
+      return <button style={{border: "5px"}} id="toolbar-connect-btn"><img id="toolbar-connect-img" src="/images/connect.png" alt="Connect, conncecting sources and sinks" onClick={this.clickBtn} width="32" height="23" /></button>
+    else
+      return  <button id="toolbar-connect-btn"><img id="toolbar-connect-img" src="/images/connect.png" alt="Connect, conncecting sources and sinks" onClick={this.clickBtn} width="32" height="23" /></button>
+    }
+
   render() {
     return (
       <div className="Toolbar" >
         <Toolbar >
             <Region id="toolbar">
-            <button id="toolbar-play"><img src="/images/play.png" alt="Play, run this flow ongoing" onClick={this.myfunction} width="32" height="23" /></button>
-            <button id="toolbar-db"><img src="/images/db.png" alt="Database, data source" onClick={this.myfunction} width="32" height="23" /></button>
-            <button id="toolbar-sink"><img src="/images/sink.png" alt="Sink, data target" onClick={this.myfunction} width="32" height="23" /></button>
-            <button id="toolbar-connect"><img src="/images/connect.png" alt="Connect, conncecting sources and sinks" onClick={this.myfunction} width="32" height="23" /></button>
+              {this.playBtn()}{this.dbBtn()}{this.sinkBtn()}{this.connectBtn()}
             </Region>
         </Toolbar>
       </div>

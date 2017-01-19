@@ -36,18 +36,83 @@ var MyBar = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (MyBar.__proto__ || Object.getPrototypeOf(MyBar)).call(this, props));
 
-    _this.myfunction = _this.myfunction.bind(_this);
+    _this.state = {
+      mode: ""
+    };
+
+    _this.clickBtn = _this.clickBtn.bind(_this);
+
+    _this.playBtn = _this.playBtn.bind(_this);
+    _this.dbBtn = _this.dbBtn.bind(_this);
+    _this.sinkBtn = _this.sinkBtn.bind(_this);
+    _this.connectBtn = _this.connectBtn.bind(_this);
+
     return _this;
   }
 
+  //Click Toolbar button event lsnr
+
+
   _createClass(MyBar, [{
-    key: 'myfunction',
-    value: function myfunction() {
-      console.log("CLICKED");
+    key: 'clickBtn',
+    value: function clickBtn(e) {
+
+      var mode = e.target.id;
+      console.log("CLICKED " + mode);
+      this.setState({ mode: mode });
     }
-
-    //style={{backgroundColor: bgColors.Blue}}
-
+  }, {
+    key: 'playBtn',
+    value: function playBtn() {
+      if (this.state.mode == "toolbar-play-img") return _react2.default.createElement(
+        'button',
+        { style: { border: "5px" }, id: 'toolbar-play-btn' },
+        _react2.default.createElement('img', { id: 'toolbar-play-img', src: '/images/play.png', alt: 'Play, run this flow ongoing', onClick: this.clickBtn, width: '32', height: '23' })
+      );else return _react2.default.createElement(
+        'button',
+        { id: 'toolbar-play-btn' },
+        _react2.default.createElement('img', { id: 'toolbar-play-img', src: '/images/play.png', alt: 'Play, run this flow ongoing', onClick: this.clickBtn, width: '32', height: '23' })
+      );
+    }
+  }, {
+    key: 'dbBtn',
+    value: function dbBtn() {
+      if (this.state.mode == "toolbar-db-img") return _react2.default.createElement(
+        'button',
+        { style: { border: "5px" }, id: 'toolbar-db-btn' },
+        _react2.default.createElement('img', { id: 'toolbar-db-img', src: '/images/db.png', alt: 'Database, data source', onClick: this.clickBtn, width: '32', height: '23' })
+      );else return _react2.default.createElement(
+        'button',
+        { id: 'toolbar-db-btn' },
+        _react2.default.createElement('img', { id: 'toolbar-db-img', src: '/images/db.png', alt: 'Database, data source', onClick: this.clickBtn, width: '32', height: '23' })
+      );
+    }
+  }, {
+    key: 'sinkBtn',
+    value: function sinkBtn() {
+      if (this.state.mode == "toolbar-sink-img") return _react2.default.createElement(
+        'button',
+        { style: { border: "5px" }, id: 'toolbar-sink-btn' },
+        _react2.default.createElement('img', { id: 'toolbar-sink-img', src: '/images/sink.png', alt: 'Sink, data target', onClick: this.clickBtn, width: '32', height: '23' })
+      );else return _react2.default.createElement(
+        'button',
+        { id: 'toolbar-sink-btn' },
+        _react2.default.createElement('img', { id: 'toolbar-sink-img', src: '/images/sink.png', alt: 'Sink, data target', onClick: this.clickBtn, width: '32', height: '23' })
+      );
+    }
+  }, {
+    key: 'connectBtn',
+    value: function connectBtn() {
+      if (this.state.mode == "toolbar-connect-img") return _react2.default.createElement(
+        'button',
+        { style: { border: "5px" }, id: 'toolbar-connect-btn' },
+        _react2.default.createElement('img', { id: 'toolbar-connect-img', src: '/images/connect.png', alt: 'Connect, conncecting sources and sinks', onClick: this.clickBtn, width: '32', height: '23' })
+      );else return _react2.default.createElement(
+        'button',
+        { id: 'toolbar-connect-btn' },
+        _react2.default.createElement('img', { id: 'toolbar-connect-img', src: '/images/connect.png', alt: 'Connect, conncecting sources and sinks', onClick: this.clickBtn, width: '32', height: '23' })
+      );
+    }
   }, {
     key: 'render',
     value: function render() {
@@ -60,26 +125,10 @@ var MyBar = function (_React$Component) {
           _react2.default.createElement(
             Region,
             { id: 'toolbar' },
-            _react2.default.createElement(
-              'button',
-              { id: 'toolbar-play' },
-              _react2.default.createElement('img', { src: '/images/play.png', alt: 'Play, run this flow ongoing', onClick: this.myfunction, width: '32', height: '23' })
-            ),
-            _react2.default.createElement(
-              'button',
-              { id: 'toolbar-db' },
-              _react2.default.createElement('img', { src: '/images/db.png', alt: 'Database, data source', onClick: this.myfunction, width: '32', height: '23' })
-            ),
-            _react2.default.createElement(
-              'button',
-              { id: 'toolbar-sink' },
-              _react2.default.createElement('img', { src: '/images/sink.png', alt: 'Sink, data target', onClick: this.myfunction, width: '32', height: '23' })
-            ),
-            _react2.default.createElement(
-              'button',
-              { id: 'toolbar-connect' },
-              _react2.default.createElement('img', { src: '/images/connect.png', alt: 'Connect, conncecting sources and sinks', onClick: this.myfunction, width: '32', height: '23' })
-            )
+            this.playBtn(),
+            this.dbBtn(),
+            this.sinkBtn(),
+            this.connectBtn()
           )
         )
       );
