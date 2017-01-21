@@ -2,11 +2,12 @@ import React from 'react';
 var Toolbar = require('react-simple-toolbar')
 var Region  = Toolbar.Region
 var bgColors = { "Default": "#81b71a",
-                    "Blue": "#00B1E1",
+                    "Blue": "#0000FF",
                     "Cyan": "#37BC9B",
                     "Green": "#8CC152",
                     "Red": "#E9573F",
                     "Yellow": "#F6BB42",
+                    "White": "#FFFFFF",
 };
 
 
@@ -24,6 +25,7 @@ class MyBar extends React.Component {
     this.dbBtn = this.dbBtn.bind(this)
     this.sinkBtn = this.sinkBtn.bind(this)
     this.connectBtn = this.connectBtn.bind(this)
+    this.dataAdmiralLogo = this.dataAdmiralLogo.bind(this)
 
   }
 
@@ -60,12 +62,18 @@ class MyBar extends React.Component {
       return  <button id="toolbar-connect-btn"><img id="toolbar-connect-img" src="/images/connect.png" alt="Connect, conncecting sources and sinks" onClick={this.clickBtn} width="32" height="23" /></button>
     }
 
+  dataAdmiralLogo() {
+    return <span style={{color: bgColors.Blue, backgroundColor: bgColors.White}}>Data Admiral</span>
+  }
   render() {
     return (
       <div className="Toolbar" >
         <Toolbar >
             <Region id="toolbar">
               {this.playBtn()}{this.dbBtn()}{this.sinkBtn()}{this.connectBtn()}
+            </Region>
+            <Region align="right">
+              {this.dataAdmiralLogo()}
             </Region>
         </Toolbar>
       </div>

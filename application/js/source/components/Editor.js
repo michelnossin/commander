@@ -34,6 +34,10 @@ class Editor extends React.Component {
     this.handleMouseUp = this.handleMouseUp.bind(this)  //mouse up event handler, used to add objects
     this.handleMouseDown = this.handleMouseDown.bind(this)  //mouse down event used to add connection (so moving mouse will make it larger)
     this.handleMouseMove = this.handleMouseMove.bind(this)  //Used to draw connections
+    this.isLastConnectionValid = this.isLastConnectionValid.bind(this) //Is connection between two objects and thus valid
+    this.correctLastConnection = this.correctLastConnection.bind(this) //If its valid make sure its connected at predetermined postions
+    this.correctConnection = this.correctConnection.bind(this) //correct any connection, so it fits nicely between two objects
+    this.removeLastConnection = this.removeLastConnection.bind(this) //If connection is not valid remove it
 
     //receive event from server
     socket.on('serverevent', ev_msg => {
@@ -73,6 +77,11 @@ class Editor extends React.Component {
     //Stop drawing line if we'r drawing
     if (this.state.drawingline == 1) {
       this.setState ({drawingline: 0})
+      if (this.isLastConnectionValid() == 1)
+        this.correctLastConnection()
+      else
+        this.removeLastConnection()
+
       return
     }
     //Toolbar click ignore
@@ -97,6 +106,73 @@ class Editor extends React.Component {
         document.addEventListener('mousedown', self.handleMouseDown, false);
         document.addEventListener('mousemove', self.handleMouseMove, false);
     }
+
+  //Is last connection between two objects valid? 0 = No , 1 = Yes
+  isLastConnectionValid() {
+    var stateCopy = Object.assign({}, this.state);
+    var lastLine = stateCopy.connections[stateCopy.connections.length-1]
+    var startPointCorrect = 0
+    var endPointCorrect = 0
+
+    //Is startpoint last line on an existing object?
+    this.state.objects.map((obj,index) => {
+      //Is start point of line in an object?
+      if (lastLine.x1 > obj.x - 25 && lastLine.x1 < obj.x + 25 &&
+          lastLine.y1 > obj.y - 25 && lastLine.y1 < obj.y + 25 ) {
+          startPointCorrect = 1
+          lastLine["from"] = obj
+        }
+    })
+    //Is endpoint lastline on an existing object?
+    this.state.objects.map((obj,index) => {
+      //Is start point of line in an object?
+      if (lastLine.x2 > obj.x - 25 && lastLine.x2 < obj.x + 25 &&
+          lastLine.y2 > obj.y - 25 && lastLine.y2 < obj.y + 25 ) {
+          endPointCorrect = 1
+          lastLine["to"] = obj
+        }
+    })
+
+    //In case both are this last line is correct
+    if (startPointCorrect == 1 && endPointCorrect == 1) {
+      lastLine["corner"] = "right"
+      this.setState({connections : stateCopy.connections})
+      return 1
+    }
+    return 0
+  }
+
+  //correct a given connection so its fits nicely between two objects. ano object can connec in 2 ways, so switch mode also
+  correctConnection(c) {
+    var stateCopy = Object.assign({}, this.state);
+    //var lastLine = stateCopy.connections[stateCopy.connections.length-1]
+    if (c.x2 > c.x1 && c.y2 > c.y1) {
+      if (c.corner == "left"){
+        c.x1 = c.from.x
+        c.y1 = c.from.y + 25
+        c.x2 = c.to.x - 25
+        c.y2 = c.to.y
+      }
+      else {
+        c.x1 = c.from.x + 25
+        c.y1 = c.from.y
+        c.x2 = c.to.x
+        c.y2 = c.to.y - 25
+      }
+    }
+    this.setState({connections : stateCopy.connections})
+  }
+  //If last connection is correct we need to correct it so its connecting at correct positions
+  correctLastConnection() {
+    this.correctConnection(this.state.connections[this.state.connections.length-1])
+  }
+
+  //If last connection is not correct we will remove it
+  removeLastConnection() {
+    var stateCopy = Object.assign({}, this.state);
+    stateCopy.connections.pop()
+    this.setState({connections : stateCopy.connections})
+  }
 
   //Add object in Editor
   addObject (x,y) {
@@ -210,46 +286,32 @@ class Editor extends React.Component {
          return w;
  }
 
-
-
     return (
-      <div className="Editor" id="editor" >{
+      <div className="Editor" id="editor" >
+      {
+        this.state.connections.map((obj,index) => (
+         <div key={"connection_" + index}>
+         <Line key={"connection_1_" + index}
+         from={{x: obj.x1, y: obj.y1}}
+         to={{x: obj.x2, y: obj.y1}} style={obj.styling}/>
+         <Line key={"connection_2_" + index}
+         from={{x: obj.x2, y: obj.y1}}
+         to={{x: obj.x2, y: obj.y2}} style={obj.styling}/>
+         </div>
+       ))
+      }
+      {
         this.state.objects.map((obj,index) => (
           <div key={"obj_" + index}>
-          <img key={"obj_" + index} style={{position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px',
+          <img ondragstart="return false;" className="Editor" key={"obj_" + index} style={{position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px',
                            width: '50px' , height : '50px'}}
                            src={imageSrc(obj.objType)} />
           <h4 style={{position: "absolute", top: (obj.y + 25) + 'px', left: (obj.x - (textWidthPixels(obj.name) / 2)) + 'px'}}>{obj.name}</h4>
           </div>
-        ))}
-        {
-        this.state.connections.map((obj,index) => (
-           <div key={"connection_a_" + index}>
-           <Line key={"connection" + index}
-           from={{x: obj.x1, y: obj.y1}}
-           to={{x: obj.x2, y: obj.y1}} style={obj.styling}/>
-           <Line key={"connection_b_" + index}
-           from={{x: obj.x2, y: obj.y1}}
-           to={{x: obj.x2, y: obj.y2}} style={obj.styling}/>
-           </div>
-         ))
-
-      }</div>
+        ))
+      }
+      </div>
     );
-/*
-    return (
-      <div className="Lineio" >
-      { Object.keys(this.state.position).map((username,index) => (
-      <Line key={index}
-      from={{x: this.state.position[username].x1, y: this.state.position[username].y1}}
-      to={{x: this.state.position[username].x2, y: this.state.position[username].y2}} style={this.state.position[username].styling}/>
-    ))}
-       <footer>{this.state.event_msg.message}</footer>
-       </div>
-    );
-*/
-
-
   }
 }
 

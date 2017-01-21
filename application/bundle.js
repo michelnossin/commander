@@ -309,6 +309,10 @@ var Editor = function (_React$Component) {
     _this.handleMouseUp = _this.handleMouseUp.bind(_this); //mouse up event handler, used to add objects
     _this.handleMouseDown = _this.handleMouseDown.bind(_this); //mouse down event used to add connection (so moving mouse will make it larger)
     _this.handleMouseMove = _this.handleMouseMove.bind(_this); //Used to draw connections
+    _this.isLastConnectionValid = _this.isLastConnectionValid.bind(_this); //Is connection between two objects and thus valid
+    _this.correctLastConnection = _this.correctLastConnection.bind(_this); //If its valid make sure its connected at predetermined postions
+    _this.correctConnection = _this.correctConnection.bind(_this); //correct any connection, so it fits nicely between two objects
+    _this.removeLastConnection = _this.removeLastConnection.bind(_this); //If connection is not valid remove it
 
     //receive event from server
     socket.on('serverevent', function (ev_msg) {
@@ -358,6 +362,8 @@ var Editor = function (_React$Component) {
       //Stop drawing line if we'r drawing
       if (this.state.drawingline == 1) {
         this.setState({ drawingline: 0 });
+        if (this.isLastConnectionValid() == 1) this.correctLastConnection();else this.removeLastConnection();
+
         return;
       }
       //Toolbar click ignore
@@ -380,6 +386,82 @@ var Editor = function (_React$Component) {
       document.addEventListener('mouseup', self.handleMouseUp, false); //click
       document.addEventListener('mousedown', self.handleMouseDown, false);
       document.addEventListener('mousemove', self.handleMouseMove, false);
+    }
+
+    //Is last connection between two objects valid? 0 = No , 1 = Yes
+
+  }, {
+    key: 'isLastConnectionValid',
+    value: function isLastConnectionValid() {
+      var stateCopy = Object.assign({}, this.state);
+      var lastLine = stateCopy.connections[stateCopy.connections.length - 1];
+      var startPointCorrect = 0;
+      var endPointCorrect = 0;
+
+      //Is startpoint last line on an existing object?
+      this.state.objects.map(function (obj, index) {
+        //Is start point of line in an object?
+        if (lastLine.x1 > obj.x - 25 && lastLine.x1 < obj.x + 25 && lastLine.y1 > obj.y - 25 && lastLine.y1 < obj.y + 25) {
+          startPointCorrect = 1;
+          lastLine["from"] = obj;
+        }
+      });
+      //Is endpoint lastline on an existing object?
+      this.state.objects.map(function (obj, index) {
+        //Is start point of line in an object?
+        if (lastLine.x2 > obj.x - 25 && lastLine.x2 < obj.x + 25 && lastLine.y2 > obj.y - 25 && lastLine.y2 < obj.y + 25) {
+          endPointCorrect = 1;
+          lastLine["to"] = obj;
+        }
+      });
+
+      //In case both are this last line is correct
+      if (startPointCorrect == 1 && endPointCorrect == 1) {
+        lastLine["corner"] = "right";
+        this.setState({ connections: stateCopy.connections });
+        return 1;
+      }
+      return 0;
+    }
+
+    //correct a given connection so its fits nicely between two objects. ano object can connec in 2 ways, so switch mode also
+
+  }, {
+    key: 'correctConnection',
+    value: function correctConnection(c) {
+      var stateCopy = Object.assign({}, this.state);
+      //var lastLine = stateCopy.connections[stateCopy.connections.length-1]
+      if (c.x2 > c.x1 && c.y2 > c.y1) {
+        if (c.corner == "left") {
+          c.x1 = c.from.x;
+          c.y1 = c.from.y + 25;
+          c.x2 = c.to.x - 25;
+          c.y2 = c.to.y;
+        } else {
+          c.x1 = c.from.x + 25;
+          c.y1 = c.from.y;
+          c.x2 = c.to.x;
+          c.y2 = c.to.y - 25;
+        }
+      }
+      this.setState({ connections: stateCopy.connections });
+    }
+    //If last connection is correct we need to correct it so its connecting at correct positions
+
+  }, {
+    key: 'correctLastConnection',
+    value: function correctLastConnection() {
+      this.correctConnection(this.state.connections[this.state.connections.length - 1]);
+    }
+
+    //If last connection is not correct we will remove it
+
+  }, {
+    key: 'removeLastConnection',
+    value: function removeLastConnection() {
+      var stateCopy = Object.assign({}, this.state);
+      stateCopy.connections.pop();
+      this.setState({ connections: stateCopy.connections });
     }
 
     //Add object in Editor
@@ -508,11 +590,23 @@ var Editor = function (_React$Component) {
       return _react2.default.createElement(
         'div',
         { className: 'Editor', id: 'editor' },
+        this.state.connections.map(function (obj, index) {
+          return _react2.default.createElement(
+            'div',
+            { key: "connection_" + index },
+            _react2.default.createElement(_Line2.default, { key: "connection_1_" + index,
+              from: { x: obj.x1, y: obj.y1 },
+              to: { x: obj.x2, y: obj.y1 }, style: obj.styling }),
+            _react2.default.createElement(_Line2.default, { key: "connection_2_" + index,
+              from: { x: obj.x2, y: obj.y1 },
+              to: { x: obj.x2, y: obj.y2 }, style: obj.styling })
+          );
+        }),
         this.state.objects.map(function (obj, index) {
           return _react2.default.createElement(
             'div',
             { key: "obj_" + index },
-            _react2.default.createElement('img', { key: "obj_" + index, style: { position: "absolute", top: obj.y - 25 + 'px', left: obj.x - 25 + 'px',
+            _react2.default.createElement('img', { ondragstart: 'return false;', className: 'Editor', key: "obj_" + index, style: { position: "absolute", top: obj.y - 25 + 'px', left: obj.x - 25 + 'px',
                 width: '50px', height: '50px' },
               src: imageSrc(obj.objType) }),
             _react2.default.createElement(
@@ -521,32 +615,8 @@ var Editor = function (_React$Component) {
               obj.name
             )
           );
-        }),
-        this.state.connections.map(function (obj, index) {
-          return _react2.default.createElement(
-            'div',
-            { key: "connection_a_" + index },
-            _react2.default.createElement(_Line2.default, { key: "connection" + index,
-              from: { x: obj.x1, y: obj.y1 },
-              to: { x: obj.x2, y: obj.y1 }, style: obj.styling }),
-            _react2.default.createElement(_Line2.default, { key: "connection_b_" + index,
-              from: { x: obj.x2, y: obj.y1 },
-              to: { x: obj.x2, y: obj.y2 }, style: obj.styling })
-          );
         })
       );
-      /*
-          return (
-            <div className="Lineio" >
-            { Object.keys(this.state.position).map((username,index) => (
-            <Line key={index}
-            from={{x: this.state.position[username].x1, y: this.state.position[username].y1}}
-            to={{x: this.state.position[username].x2, y: this.state.position[username].y2}} style={this.state.position[username].styling}/>
-          ))}
-             <footer>{this.state.event_msg.message}</footer>
-             </div>
-          );
-      */
     }
   }]);
 
@@ -665,11 +735,12 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var Toolbar = require('react-simple-toolbar');
 var Region = Toolbar.Region;
 var bgColors = { "Default": "#81b71a",
-  "Blue": "#00B1E1",
+  "Blue": "#0000FF",
   "Cyan": "#37BC9B",
   "Green": "#8CC152",
   "Red": "#E9573F",
-  "Yellow": "#F6BB42"
+  "Yellow": "#F6BB42",
+  "White": "#FFFFFF"
 };
 
 var MyBar = function (_React$Component) {
@@ -690,6 +761,7 @@ var MyBar = function (_React$Component) {
     _this.dbBtn = _this.dbBtn.bind(_this);
     _this.sinkBtn = _this.sinkBtn.bind(_this);
     _this.connectBtn = _this.connectBtn.bind(_this);
+    _this.dataAdmiralLogo = _this.dataAdmiralLogo.bind(_this);
 
     return _this;
   }
@@ -758,6 +830,15 @@ var MyBar = function (_React$Component) {
       );
     }
   }, {
+    key: 'dataAdmiralLogo',
+    value: function dataAdmiralLogo() {
+      return _react2.default.createElement(
+        'span',
+        { style: { color: bgColors.Blue, backgroundColor: bgColors.White } },
+        'Data Admiral'
+      );
+    }
+  }, {
     key: 'render',
     value: function render() {
       return _react2.default.createElement(
@@ -773,6 +854,11 @@ var MyBar = function (_React$Component) {
             this.dbBtn(),
             this.sinkBtn(),
             this.connectBtn()
+          ),
+          _react2.default.createElement(
+            Region,
+            { align: 'right' },
+            this.dataAdmiralLogo()
           )
         )
       );

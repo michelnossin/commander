@@ -6,6 +6,13 @@
   height: 100%;
   vertical-align: middle;
   width: 100%;
+  user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
 }
 .Toolbar {
   /* background-image: url('images/react-logo.svg');*/

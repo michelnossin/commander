@@ -21,11 +21,12 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var Toolbar = require('react-simple-toolbar');
 var Region = Toolbar.Region;
 var bgColors = { "Default": "#81b71a",
-  "Blue": "#00B1E1",
+  "Blue": "#0000FF",
   "Cyan": "#37BC9B",
   "Green": "#8CC152",
   "Red": "#E9573F",
-  "Yellow": "#F6BB42"
+  "Yellow": "#F6BB42",
+  "White": "#FFFFFF"
 };
 
 var MyBar = function (_React$Component) {
@@ -46,6 +47,7 @@ var MyBar = function (_React$Component) {
     _this.dbBtn = _this.dbBtn.bind(_this);
     _this.sinkBtn = _this.sinkBtn.bind(_this);
     _this.connectBtn = _this.connectBtn.bind(_this);
+    _this.dataAdmiralLogo = _this.dataAdmiralLogo.bind(_this);
 
     return _this;
   }
@@ -114,6 +116,15 @@ var MyBar = function (_React$Component) {
       );
     }
   }, {
+    key: 'dataAdmiralLogo',
+    value: function dataAdmiralLogo() {
+      return _react2.default.createElement(
+        'span',
+        { style: { color: bgColors.Blue, backgroundColor: bgColors.White } },
+        'Data Admiral'
+      );
+    }
+  }, {
     key: 'render',
     value: function render() {
       return _react2.default.createElement(
@@ -129,6 +140,11 @@ var MyBar = function (_React$Component) {
             this.dbBtn(),
             this.sinkBtn(),
             this.connectBtn()
+          ),
+          _react2.default.createElement(
+            Region,
+            { align: 'right' },
+            this.dataAdmiralLogo()
           )
         )
       );
