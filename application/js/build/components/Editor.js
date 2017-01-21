@@ -42,6 +42,8 @@ var bgColors = { "Default": "#81b71a",
 //let user = "user_" + Math.random().toString(36).substring(7); //Lets give the user a name, todo: let the user make this up
 //console.log("Client is using this name: " + user  );
 
+//The editor is the yellow editor field in which the user will add objects and connections.
+
 var Editor = function (_React$Component) {
   _inherits(Editor, _React$Component);
 
@@ -51,15 +53,19 @@ var Editor = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (Editor.__proto__ || Object.getPrototypeOf(Editor)).call(this, props));
 
     _this.state = {
-      //event_msg: {}, //message from server
-      mode: "",
-      objects: [] //list of all non current lines
+      mode: "", //Which toolbar button is pressed determines the mode (like play , source etc)
+      objects: [], //list of all objects drawn in the editor
+      connections: [], //list of all connections (lines) between the objects
+      drawingline: 0 //set to 1 while use is drawing a line, used by mousemove event
     };
 
     //this.sendMessage = this.sendMessage.bind(this)
-    _this.addObject = _this.addObject.bind(_this);
-    _this.selectObject = _this.selectObject.bind(_this);
-    _this.handleClick = _this.handleClick.bind(_this);
+    _this.addObject = _this.addObject.bind(_this); //Add object like source or sink in editor
+    _this.addConnection = _this.addConnection.bind(_this); //Add connection/line between two objects
+    _this.selectObject = _this.selectObject.bind(_this); //select existing object or connection
+    _this.handleMouseUp = _this.handleMouseUp.bind(_this); //mouse up event handler, used to add objects
+    _this.handleMouseDown = _this.handleMouseDown.bind(_this); //mouse down event used to add connection (so moving mouse will make it larger)
+    _this.handleMouseMove = _this.handleMouseMove.bind(_this); //Used to draw connections
 
     //receive event from server
     socket.on('serverevent', function (ev_msg) {
@@ -76,33 +82,61 @@ var Editor = function (_React$Component) {
     return _this;
   }
 
-  //Mouse is clicked
+  //Mouse is moved
 
 
   _createClass(Editor, [{
-    key: 'handleClick',
-    value: function handleClick(e) {
+    key: 'handleMouseMove',
+    value: function handleMouseMove(e) {
+      if (this.state.drawingline == 1) {
+        //Use is drawing line, make line larger
+        var stateCopy = Object.assign({}, this.state);
+        var lastLine = stateCopy.connections[stateCopy.connections.length - 1];
+        lastLine.x2 = e.clientX;
+        lastLine.y2 = e.clientY;
+        this.setState(stateCopy);
+      }
+    }
+    //Mouse is clicked
 
+  }, {
+    key: 'handleMouseDown',
+    value: function handleMouseDown(e) {
+      //Users wants to draw a connect Line,
+      if (this.state.mode == "toolbar-connect-img" && e.target.id == "") {
+        this.addConnection(e.clientX, e.clientY);
+      }
+    }
+    //Mouse is clicked
+
+  }, {
+    key: 'handleMouseUp',
+    value: function handleMouseUp(e) {
+      //Stop drawing line if we'r drawing
+      if (this.state.drawingline == 1) {
+        this.setState({ drawingline: 0 });
+        return;
+      }
       //Toolbar click ignore
-      if (e.target.id == "toolbar") return;
-      //play mode
-      else if (e.target.id == "toolbar-play-img") {
-          return;
-        }
+      else if (e.target.id == "toolbar") return;
         //Toolbar button changes mode
         else if (e.target.id != "") {
             //"toolbar-play-img"
             this.setState({ mode: e.target.id });
             return;
           }
-          //Click in editor add object
-          else this.addObject(e.clientX, e.clientY);
+          //Click in editor add object, except if mode is play which just means the editor is playing, or empty
+          else {
+              if (this.state.mode != "toolbar-play-img" && this.state.mode != "") this.addObject(e.clientX, e.clientY);
+            }
     }
   }, {
     key: 'componentWillMount',
     value: function componentWillMount() {
       var self = this;
-      document.addEventListener('click', self.handleClick, false);
+      document.addEventListener('mouseup', self.handleMouseUp, false); //click
+      document.addEventListener('mousedown', self.handleMouseDown, false);
+      document.addEventListener('mousemove', self.handleMouseMove, false);
     }
 
     //Add object in Editor
@@ -111,6 +145,15 @@ var Editor = function (_React$Component) {
     key: 'addObject',
     value: function addObject(x, y) {
       this.state.objects.push({ name: "Change this", x: x, y: y, objType: this.state.mode });
+      this.forceUpdate();
+    }
+    //Add connection between two objects
+
+  }, {
+    key: 'addConnection',
+    value: function addConnection(x, y) {
+      this.state.connections.push({ x1: x, y1: y, x2: x, y2: y, styling: "1px solid black" });
+      this.setState({ drawingline: 1 });
       this.forceUpdate();
     }
   }, {
@@ -167,7 +210,9 @@ var Editor = function (_React$Component) {
     value: function componentWillUnmount() {
       console.log("Client with was disconnected ");
       window.removeEventListener("resize", this.updateDimensions);
-      document.removeEventListener('click', this.handleClick, false);
+      document.removeEventListener('mouseup', this.handleMouseUp, false); //click
+      document.removeEventListener('mousedown', this.handleMouseUp, false);
+      document.removeEventListener('mousemove', this.handleMouseMove, false);
     }
 
     //Send event message to server, for example to let others know we change our line direction
@@ -202,6 +247,7 @@ var Editor = function (_React$Component) {
         return result;
       };
 
+      //get pixel for text so we can add title on objects nicely centered
       var textWidthPixels = function textWidthPixels(txt) {
         // Create dummy span
         var x = document.createElement('span');
@@ -222,8 +268,8 @@ var Editor = function (_React$Component) {
         this.state.objects.map(function (obj, index) {
           return _react2.default.createElement(
             'div',
-            null,
-            _react2.default.createElement('img', { key: index, style: { position: "absolute", top: obj.y - 25 + 'px', left: obj.x - 25 + 'px',
+            { key: "obj_" + index },
+            _react2.default.createElement('img', { key: "obj_" + index, style: { position: "absolute", top: obj.y - 25 + 'px', left: obj.x - 25 + 'px',
                 width: '50px', height: '50px' },
               src: imageSrc(obj.objType) }),
             _react2.default.createElement(
@@ -231,6 +277,18 @@ var Editor = function (_React$Component) {
               { style: { position: "absolute", top: obj.y + 25 + 'px', left: obj.x - textWidthPixels(obj.name) / 2 + 'px' } },
               obj.name
             )
+          );
+        }),
+        this.state.connections.map(function (obj, index) {
+          return _react2.default.createElement(
+            'div',
+            { key: "connection_a_" + index },
+            _react2.default.createElement(_Line2.default, { key: "connection" + index,
+              from: { x: obj.x1, y: obj.y1 },
+              to: { x: obj.x2, y: obj.y1 }, style: obj.styling }),
+            _react2.default.createElement(_Line2.default, { key: "connection_b_" + index,
+              from: { x: obj.x2, y: obj.y1 },
+              to: { x: obj.x2, y: obj.y2 }, style: obj.styling })
           );
         })
       );

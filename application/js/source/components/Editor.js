@@ -14,21 +14,26 @@ var bgColors = { "Default": "#81b71a",
 //let user = "user_" + Math.random().toString(36).substring(7); //Lets give the user a name, todo: let the user make this up
 //console.log("Client is using this name: " + user  );
 
+//The editor is the yellow editor field in which the user will add objects and connections.
 class Editor extends React.Component {
 
   constructor(props) {
     super(props);
 
     this.state = {
-        //event_msg: {}, //message from server
-        mode : "",
-        objects : []  //list of all non current lines
+        mode : "", //Which toolbar button is pressed determines the mode (like play , source etc)
+        objects : [],  //list of all objects drawn in the editor
+        connections : [], //list of all connections (lines) between the objects
+        drawingline: 0  //set to 1 while use is drawing a line, used by mousemove event
     };
 
     //this.sendMessage = this.sendMessage.bind(this)
-    this.addObject = this.addObject.bind(this)
-    this.selectObject = this.selectObject.bind(this)
-    this.handleClick = this.handleClick.bind(this)
+    this.addObject = this.addObject.bind(this) //Add object like source or sink in editor
+    this.addConnection = this.addConnection.bind(this)  //Add connection/line between two objects
+    this.selectObject = this.selectObject.bind(this)    //select existing object or connection
+    this.handleMouseUp = this.handleMouseUp.bind(this)  //mouse up event handler, used to add objects
+    this.handleMouseDown = this.handleMouseDown.bind(this)  //mouse down event used to add connection (so moving mouse will make it larger)
+    this.handleMouseMove = this.handleMouseMove.bind(this)  //Used to draw connections
 
     //receive event from server
     socket.on('serverevent', ev_msg => {
@@ -44,11 +49,34 @@ class Editor extends React.Component {
     })
   }
 
-  //Mouse is clicked
-  handleClick  (e) {
+  //Mouse is moved
+  handleMouseMove  (e) {
+    if (this.state.drawingline == 1) {
+      //Use is drawing line, make line larger
+      var stateCopy = Object.assign({}, this.state);
+      var lastLine = stateCopy.connections[stateCopy.connections.length-1]
+      lastLine.x2 = e.clientX;
+      lastLine.y2 = e.clientY;
+      this.setState(stateCopy);
 
+    }
+  }
+  //Mouse is clicked
+  handleMouseDown  (e) {
+    //Users wants to draw a connect Line,
+    if (this.state.mode == "toolbar-connect-img" && e.target.id == "") {
+      this.addConnection(e.clientX,e.clientY)
+    }
+  }
+  //Mouse is clicked
+  handleMouseUp  (e) {
+    //Stop drawing line if we'r drawing
+    if (this.state.drawingline == 1) {
+      this.setState ({drawingline: 0})
+      return
+    }
     //Toolbar click ignore
-    if (e.target.id == "toolbar")
+    else if (e.target.id == "toolbar")
       return
     //Toolbar button changes mode
     else if (e.target.id != "") {
@@ -56,21 +84,29 @@ class Editor extends React.Component {
         this.setState({mode: e.target.id})
         return
       }
-    //Click in editor add object
+    //Click in editor add object, except if mode is play which just means the editor is playing, or empty
     else {
-      if (this.state.mode != "toolbar-play-img")
+      if (this.state.mode != "toolbar-play-img" && this.state.mode != "" )
         this.addObject(e.clientX,e.clientY)
     }
   }
 
   componentWillMount  () {
         let self = this
-        document.addEventListener('click', self.handleClick, false);
+        document.addEventListener('mouseup', self.handleMouseUp, false); //click
+        document.addEventListener('mousedown', self.handleMouseDown, false);
+        document.addEventListener('mousemove', self.handleMouseMove, false);
     }
 
   //Add object in Editor
   addObject (x,y) {
     this.state.objects.push({ name: "Change this" , x: x, y:y , objType : this.state.mode})
+    this.forceUpdate()
+  }
+  //Add connection between two objects
+  addConnection (x,y) {
+    this.state.connections.push({ x1: x, y1:y, x2:x ,y2:y , styling: "1px solid black"})
+    this.setState({ drawingline: 1})
     this.forceUpdate()
   }
 
@@ -124,7 +160,9 @@ class Editor extends React.Component {
   componentWillUnmount() {
     console.log("Client with was disconnected "  );
     window.removeEventListener("resize", this.updateDimensions);
-    document.removeEventListener('click', this.handleClick, false);
+    document.removeEventListener('mouseup', this.handleMouseUp, false); //click
+    document.removeEventListener('mousedown', this.handleMouseUp, false);
+    document.removeEventListener('mousemove', this.handleMouseMove, false);
 
   }
 
@@ -173,16 +211,28 @@ class Editor extends React.Component {
  }
 
 
+
     return (
       <div className="Editor" id="editor" >{
         this.state.objects.map((obj,index) => (
-          <div>
-          <img key={index} style={{position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px',
+          <div key={"obj_" + index}>
+          <img key={"obj_" + index} style={{position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px',
                            width: '50px' , height : '50px'}}
                            src={imageSrc(obj.objType)} />
           <h4 style={{position: "absolute", top: (obj.y + 25) + 'px', left: (obj.x - (textWidthPixels(obj.name) / 2)) + 'px'}}>{obj.name}</h4>
           </div>
-        ))
+        ))}
+        {
+        this.state.connections.map((obj,index) => (
+           <div key={"connection_a_" + index}>
+           <Line key={"connection" + index}
+           from={{x: obj.x1, y: obj.y1}}
+           to={{x: obj.x2, y: obj.y1}} style={obj.styling}/>
+           <Line key={"connection_b_" + index}
+           from={{x: obj.x2, y: obj.y1}}
+           to={{x: obj.x2, y: obj.y2}} style={obj.styling}/>
+           </div>
+         ))
 
       }</div>
     );
