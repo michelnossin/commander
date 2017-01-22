@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Line from './Line';
 import io from 'socket.io-client'
+
 let socket = io(`http://localhost`) //our server 192.168.0.105
 var bgColors = { "Default": "#81b71a",
                     "Blue": "#00B1E1",
@@ -229,7 +230,7 @@ class Editor extends React.Component {
   }
   //Add connection between two objects
   addConnection (x,y) {
-    this.state.connections.push({ x1: x, y1:y, x2:x ,y2:y , styling: "1px solid black"})
+    this.state.connections.push({ x1: x, y1:y, x2:x ,y2:y , styling: "1px solid black",corner: "right"})
     this.setState({ drawingline: 1})
     this.forceUpdate()
   }
@@ -334,18 +335,39 @@ class Editor extends React.Component {
          return w;
  }
 
+    //Get triangle based on position begin and and so it directs correct
+    var getTriangle = function(x1,y1,x2,y2,corner) {
+      if (corner == "right") {
+        if (x2 > x1)
+          return "images/triangle-right.png"
+        else
+          return "images/triangle-left.png"
+      }
+      else {
+        if (y2 > y1)
+          return "images/triangle-up.png"
+        else
+          return "images/triangle-down.png"
+      }
+
+    }
+
     return (
       <div className="Editor" id="editor" >
       {
         this.state.connections.map((obj,index) => (
          <div key={"connection_" + index}>
-         <Line key={"connection_1_" + index}
-         from={{x: obj.x1, y: obj.y1}}
-         to={{x: obj.x2, y: obj.y1}} style={obj.styling}/>
-         <Line key={"connection_2_" + index}
-         from={{x: obj.x2, y: obj.y1}}
-         to={{x: obj.x2, y: obj.y2}} style={obj.styling}/>
+           <Line key={"connection_1_" + index}
+               from={{x: obj.x1, y: obj.y1}}
+               to={{x: obj.x2, y: obj.y1}} style={obj.styling}/>
+           <Line key={"connection_2_" + index}
+               from={{x: obj.x2, y: obj.y1}}
+               to={{x: obj.x2, y: obj.y2}} style={obj.styling}/>
+           <img key={"connection_3_" + index}
+               style={{position: "absolute", top: (obj.y1 - 8) + 'px', left: (obj.x2 - ((obj.x2 - obj.x1)/2)) + 'px'}}
+              src={getTriangle(obj.x1,obj.y1,obj.x2,obj.y2,obj.corner)} />
          </div>
+
        ))
       }
       {
