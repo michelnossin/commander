@@ -9,6 +9,9 @@ var bgColors = { "Default": "#81b71a",
                     "Green": "#8CC152",
                     "Red": "#E9573F",
                     "Yellow": "#F6BB42",
+                    "White": "#FFFFFF",
+                    "Black": "#000000",
+
 };
 
 //let user = "user_" + Math.random().toString(36).substring(7); //Lets give the user a name, todo: let the user make this up
@@ -82,10 +85,10 @@ class Editor extends React.Component {
       else
         this.removeLastConnection()
 
-      return
+      //return
     }
     //Toolbar click ignore
-    else if (e.target.id == "toolbar")
+    if (e.target.id == "toolbar")
       return
     //Toolbar button changes mode
     else if (e.target.id != "") {
@@ -95,7 +98,7 @@ class Editor extends React.Component {
       }
     //Click in editor add object, except if mode is play which just means the editor is playing, or empty
     else {
-      if (this.state.mode != "toolbar-play-img" && this.state.mode != "" )
+      if (this.state.mode != "toolbar-play-img" && this.state.mode != "" && this.state.mode != "toolbar-connect-img")
         this.addObject(e.clientX,e.clientY)
     }
   }
@@ -158,6 +161,48 @@ class Editor extends React.Component {
         c.y1 = c.from.y
         c.x2 = c.to.x
         c.y2 = c.to.y - 25
+      }
+    }
+    else if (c.x2 > c.x1 && c.y2 < c.y1) {
+      if (c.corner == "left"){
+        c.x1 = c.from.x
+        c.y1 = c.from.y - 25
+        c.x2 = c.to.x - 25
+        c.y2 = c.to.y
+      }
+      else {
+        c.x1 = c.from.x + 25
+        c.y1 = c.from.y
+        c.x2 = c.to.x
+        c.y2 = c.to.y + 25
+      }
+    }
+    else if (c.x2 < c.x1 && c.y2 < c.y1) {
+      if (c.corner == "right"){
+        c.x1 = c.from.x - 25
+        c.y1 = c.from.y
+        c.x2 = c.to.x
+        c.y2 = c.to.y + 25
+      }
+      else {
+        c.x1 = c.from.x
+        c.y1 = c.from.y - 25
+        c.x2 = c.to.x + 25
+        c.y2 = c.to.y
+      }
+    }
+    else if (c.x2 < c.x1 && c.y2 > c.y1) {
+      if (c.corner == "right"){
+        c.x1 = c.from.x - 25
+        c.y1 = c.from.y
+        c.x2 = c.to.x
+        c.y2 = c.to.y - 25
+      }
+      else {
+        c.x1 = c.from.x
+        c.y1 = c.from.y + 25
+        c.x2 = c.to.x + 25
+        c.y2 = c.to.y
       }
     }
     this.setState({connections : stateCopy.connections})
@@ -306,7 +351,8 @@ class Editor extends React.Component {
           <img ondragstart="return false;" className="Editor" key={"obj_" + index} style={{position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px',
                            width: '50px' , height : '50px'}}
                            src={imageSrc(obj.objType)} />
-          <h4 style={{position: "absolute", top: (obj.y + 25) + 'px', left: (obj.x - (textWidthPixels(obj.name) / 2)) + 'px'}}>{obj.name}</h4>
+          <h4 style={{position: "absolute", top: (obj.y + 25) + 'px', left: (obj.x - (textWidthPixels(obj.name) / 2)) + 'px'}}>
+              <span style={{color: bgColors.Black, backgroundColor: bgColors.White}}>{obj.name}</span></h4>
           </div>
         ))
       }

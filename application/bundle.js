@@ -279,7 +279,10 @@ var bgColors = { "Default": "#81b71a",
   "Cyan": "#37BC9B",
   "Green": "#8CC152",
   "Red": "#E9573F",
-  "Yellow": "#F6BB42"
+  "Yellow": "#F6BB42",
+  "White": "#FFFFFF",
+  "Black": "#000000"
+
 };
 
 //let user = "user_" + Math.random().toString(36).substring(7); //Lets give the user a name, todo: let the user make this up
@@ -364,20 +367,20 @@ var Editor = function (_React$Component) {
         this.setState({ drawingline: 0 });
         if (this.isLastConnectionValid() == 1) this.correctLastConnection();else this.removeLastConnection();
 
-        return;
+        //return
       }
       //Toolbar click ignore
-      else if (e.target.id == "toolbar") return;
-        //Toolbar button changes mode
-        else if (e.target.id != "") {
-            //"toolbar-play-img"
-            this.setState({ mode: e.target.id });
-            return;
+      if (e.target.id == "toolbar") return;
+      //Toolbar button changes mode
+      else if (e.target.id != "") {
+          //"toolbar-play-img"
+          this.setState({ mode: e.target.id });
+          return;
+        }
+        //Click in editor add object, except if mode is play which just means the editor is playing, or empty
+        else {
+            if (this.state.mode != "toolbar-play-img" && this.state.mode != "" && this.state.mode != "toolbar-connect-img") this.addObject(e.clientX, e.clientY);
           }
-          //Click in editor add object, except if mode is play which just means the editor is playing, or empty
-          else {
-              if (this.state.mode != "toolbar-play-img" && this.state.mode != "") this.addObject(e.clientX, e.clientY);
-            }
     }
   }, {
     key: 'componentWillMount',
@@ -442,6 +445,42 @@ var Editor = function (_React$Component) {
           c.y1 = c.from.y;
           c.x2 = c.to.x;
           c.y2 = c.to.y - 25;
+        }
+      } else if (c.x2 > c.x1 && c.y2 < c.y1) {
+        if (c.corner == "left") {
+          c.x1 = c.from.x;
+          c.y1 = c.from.y - 25;
+          c.x2 = c.to.x - 25;
+          c.y2 = c.to.y;
+        } else {
+          c.x1 = c.from.x + 25;
+          c.y1 = c.from.y;
+          c.x2 = c.to.x;
+          c.y2 = c.to.y + 25;
+        }
+      } else if (c.x2 < c.x1 && c.y2 < c.y1) {
+        if (c.corner == "right") {
+          c.x1 = c.from.x - 25;
+          c.y1 = c.from.y;
+          c.x2 = c.to.x;
+          c.y2 = c.to.y + 25;
+        } else {
+          c.x1 = c.from.x;
+          c.y1 = c.from.y - 25;
+          c.x2 = c.to.x + 25;
+          c.y2 = c.to.y;
+        }
+      } else if (c.x2 < c.x1 && c.y2 > c.y1) {
+        if (c.corner == "right") {
+          c.x1 = c.from.x - 25;
+          c.y1 = c.from.y;
+          c.x2 = c.to.x;
+          c.y2 = c.to.y - 25;
+        } else {
+          c.x1 = c.from.x;
+          c.y1 = c.from.y + 25;
+          c.x2 = c.to.x + 25;
+          c.y2 = c.to.y;
         }
       }
       this.setState({ connections: stateCopy.connections });
@@ -612,7 +651,11 @@ var Editor = function (_React$Component) {
             _react2.default.createElement(
               'h4',
               { style: { position: "absolute", top: obj.y + 25 + 'px', left: obj.x - textWidthPixels(obj.name) / 2 + 'px' } },
-              obj.name
+              _react2.default.createElement(
+                'span',
+                { style: { color: bgColors.Black, backgroundColor: bgColors.White } },
+                obj.name
+              )
             )
           );
         })
