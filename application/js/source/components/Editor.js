@@ -34,7 +34,6 @@ class Editor extends React.Component {
     //this.sendMessage = this.sendMessage.bind(this)
     this.addObject = this.addObject.bind(this) //Add object like source or sink in editor
     this.addConnection = this.addConnection.bind(this)  //Add connection/line between two objects
-    this.selectObject = this.selectObject.bind(this)    //select existing object or connection
     this.handleMouseUp = this.handleMouseUp.bind(this)  //mouse up event handler, used to add objects
     this.handleMouseDown = this.handleMouseDown.bind(this)  //mouse down event used to add connection (so moving mouse will make it larger)
     this.handleMouseMove = this.handleMouseMove.bind(this)  //Used to draw connections
@@ -42,6 +41,8 @@ class Editor extends React.Component {
     this.correctLastConnection = this.correctLastConnection.bind(this) //If its valid make sure its connected at predetermined postions
     this.correctConnection = this.correctConnection.bind(this) //correct any connection, so it fits nicely between two objects
     this.removeLastConnection = this.removeLastConnection.bind(this) //If connection is not valid remove it
+    this.selectObject = this.selectObject.bind(this) //Select object at given position, if any
+    this.deselectAll = this.deselectAll.bind(this) //deselect all objects and connections
 
     //receive event from server
     socket.on('serverevent', ev_msg => {
@@ -69,16 +70,81 @@ class Editor extends React.Component {
 
     }
   }
-  //Mouse is clicked
+
+  //Select object at certain position (if an object exists at the position)
+  selectObject(posX,posY) {
+
+    var isObjectFound = 0
+    //Is position at a object? Select it, and deselect the rest
+    this.state.objects.map((obj,index) => {
+      if (posX > obj.x - 25 && posX < obj.x + 25 ) {
+        if (posY > obj.y - 25 && posY < obj.y + 25) {
+          //Yes found object, deselect al objects and select current object
+          this.deselectAll()
+          obj["selected"] = 1
+          isObjectFound = 1 //object selected
+        }
+      }
+
+     })
+
+     //Is position at a connection? Select it, delesecting the rest
+     this.state.connections.map((obj,index) => {
+
+       if (obj["corner"] == "left") {
+         if ((posX < obj.x1 + 5 && posX > obj.x1 - 5 && posY > obj.y1 && posY < obj.y2 ) ||
+         (posX > obj.x1 && posX < obj.x2 && posY < obj.y2 + 5 && posY > obj.y2 - 5)) {
+             //Yes found object, deselect al objects and select current object
+             this.deselectAll()
+             obj["selected"] = 1
+             obj["corner"] = "right" //switch corner connection if clicked
+             isObjectFound = 1
+             this.correctConnection(obj) //Beautify it again
+           }
+
+       }
+       //Right
+       else {
+         let condition1 = ((posX > obj.x1 && posX < obj.x2 && posY < obj.y1 + 5 && posY > obj.y1 - 5) ||
+                      (posX > obj.x2 -5 && posX < obj.x2 + 5 && posY > obj.y1 && posY < obj.y2))
+         let condition2 = ((posX > obj.x1 && posX < obj.x2 && posY < obj.y1 + 5 && posY > obj.y1 - 5) ||
+                     (posX > obj.x2 -5 && posX < obj.x2 + 5 && posY > obj.y2 && posY < obj.y1))
+         let condition3 = ((posX > obj.x2 && posX < obj.x1 && posY < obj.y1 + 5 && posY > obj.y1 - 5) ||
+                      (posX > obj.x2 -5 && posX < obj.x2 + 5 && posY > obj.y2 && posY < obj.y1))
+         let condition4 = ((posX > obj.x2 && posX < obj.x1 && posY < obj.y1 + 5 && posY > obj.y1 - 5) ||
+                     (posX > obj.x2 -5 && posX < obj.x2 + 5 && posY > obj.y1 && posY < obj.y2))
+
+
+            if ((obj.x1 < obj.x2 && obj.y1 < obj.y2 && condition1) ||
+             (obj.x1 < obj.x2 && obj.y1 > obj.y2 && condition2) ||
+              (obj.x2 < obj.x1 && obj.y2 < obj.y1 && condition3) ||
+            (obj.x1 > obj.x2 && obj.y2 > obj.y1 && condition4)) {
+             //Yes found object, deselect al objects and select current object
+             this.deselectAll()
+             obj["selected"] = 1
+             obj["corner"] = "left"  //switch corner connection if clicked
+             isObjectFound = 1
+             this.correctConnection(obj) //Beautify it again
+           }
+       }
+      })
+
+    if (isObjectFound == 1) this.forceUpdate()
+     return isObjectFound
+
+  }
+
+  //Mouse is clicked down
   handleMouseDown  (e) {
     //Users wants to draw a connect Line,
     if (this.state.mode == "connect" && e.target.id == "") {
       this.addConnection(e.clientX,e.clientY)
     }
+
   }
-  //Mouse is clicked
+  //Mouse is clicked up
   handleMouseUp  (e) {
-    //Stop drawing line if we'r drawing
+    //Stop drawing line if we'r drawing and make the connection line nice after validity check (it has to connect 2 objects)
     if (this.state.drawingline == 1) {
       this.setState ({drawingline: 0})
       if (this.isLastConnectionValid() == 1)
@@ -100,18 +166,21 @@ class Editor extends React.Component {
         else if (e.target.id == "toolbar-connect-img" || e.target.id == "toolbar-connect-btn") this.setState({mode: "connect"})
         return
       }
-    //Click in editor add object, except if mode is play which just means the editor is playing, or empty
+    //Click in editor means: add object, except when in play mode or on top of other object
     else {
-      if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect")
-        this.addObject(e.clientX,e.clientY)
+      if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect") {
+        if (this.selectObject(e.clientX,e.clientY) == 0) //Select object in case we clicked on it (or on a connection)
+          this.addObject(e.clientX,e.clientY)
+
+        }
     }
   }
 
   componentWillMount  () {
-        let self = this
-        document.addEventListener('mouseup', self.handleMouseUp, false); //click
-        document.addEventListener('mousedown', self.handleMouseDown, false);
-        document.addEventListener('mousemove', self.handleMouseMove, false);
+      let self = this
+      document.addEventListener('mouseup', self.handleMouseUp, false); //click
+      document.addEventListener('mousedown', self.handleMouseDown, false);
+      document.addEventListener('mousemove', self.handleMouseMove, false);
     }
 
   //Is last connection between two objects valid? 0 = No , 1 = Yes
@@ -223,21 +292,25 @@ class Editor extends React.Component {
     this.setState({connections : stateCopy.connections})
   }
 
+  //Deselect all objects and connections
+  deselectAll() {
+    this.state.objects.map((obj,index) => { obj["selected"] = 0})
+    this.state.connections.map((obj,index) => { obj["selected"] = 0})
+  }
   //Add object in Editor
   addObject (x,y) {
-    this.state.objects.push({ name: "Change this" , x: x, y:y , objType : this.state.mode})
+    this.deselectAll()
+    this.state.objects.push({ name: "Change this" , x: x, y:y , objType : this.state.mode, selected : 0})
     this.forceUpdate()
   }
   //Add connection between two objects
   addConnection (x,y) {
-    this.state.connections.push({ x1: x, y1:y, x2:x ,y2:y , styling: "1px solid black",corner: "right"})
+    this.deselectAll()
+    this.state.connections.push({ x1: x, y1:y, x2:x ,y2:y , styling: "1px solid black",corner: "right", selected: 0})
     this.setState({ drawingline: 1})
     this.forceUpdate()
   }
 
-  selectObject () {
-    return
-  }
 
   //shouldComponentUpdate(nextProps, nextState) {
   //  return false;
@@ -337,7 +410,7 @@ class Editor extends React.Component {
 
     //Get triangle based on position begin and and so it directs correct
     var getTriangle = function(x1,y1,x2,y2,corner) {
-      if (corner == "right") {
+      if (corner == "right" ) {
         if (x2 > x1)
           return "images/triangle-right.png"
         else
@@ -345,36 +418,78 @@ class Editor extends React.Component {
       }
       else {
         if (y2 > y1)
-          return "images/triangle-up.png"
-        else
           return "images/triangle-down.png"
+        else
+          return "images/triangle-up.png"
       }
+
+    }
+
+    //Get object style, which is the same except when selected
+    var getObjectStyle = function(obj) {
+      var result = {position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px', width: '50px' , height : '50px'}
+      if (obj.selected == 1)
+        result["outline"] = '6px dotted white'
+
+      return result
+    }
+
+    //Get style for the connection objects
+    var getConnectionStyle = function(obj) {
+      var result
+      if (obj.selected == 1)
+        result = "1px dotted orange"
+      else
+        result = "1px solid black"
+
+      return result
+    }
+
+    //Based on the connection object render the connection lines and triangle
+    var getConnection = function(obj,index) {
+      if (obj["corner"] == "right") {
+         return (
+            <div key={"connection_" + index}>
+            <Line key={"connection_1_" + index}
+                from={{x: obj.x1, y: obj.y1}}
+                to={{x: obj.x2, y: obj.y1}} style={getConnectionStyle(obj)}/>
+            <Line key={"connection_2_" + index}
+                from={{x: obj.x2, y: obj.y1}}
+                to={{x: obj.x2, y: obj.y2}} style={getConnectionStyle(obj)}/>
+            <img key={"connection_3_" + index}
+                style={{position: "absolute", top: (obj.y1 - 8) + 'px', left: (obj.x2 - ((obj.x2 - obj.x1)/2)) + 'px'}}
+               src={getTriangle(obj.x1,obj.y1,obj.x2,obj.y2,obj.corner)} />
+          </div>
+        )}
+        else {
+          return (
+             <div key={"connection_" + index}>
+             <Line key={"connection_1_" + index}
+                 from={{x: obj.x1, y: obj.y1}}
+                 to={{x: obj.x1, y: obj.y2}} style={getConnectionStyle(obj)}/>
+             <Line key={"connection_2_" + index}
+                 from={{x: obj.x1, y: obj.y2}}
+                 to={{x: obj.x2, y: obj.y2}} style={getConnectionStyle(obj)}/>
+             <img key={"connection_3_" + index}
+                 style={{position: "absolute", top: (obj.y2 - ((obj.y2 - obj.y1)/2)) + 'px', left: (obj.x1 - 8) + 'px'}}
+                src={getTriangle(obj.x1,obj.y1,obj.x2,obj.y2,obj.corner)} />
+           </div>
+         )
+        }
+
 
     }
 
     return (
       <div className="Editor" id="editor" >
       {
-        this.state.connections.map((obj,index) => (
-         <div key={"connection_" + index}>
-           <Line key={"connection_1_" + index}
-               from={{x: obj.x1, y: obj.y1}}
-               to={{x: obj.x2, y: obj.y1}} style={obj.styling}/>
-           <Line key={"connection_2_" + index}
-               from={{x: obj.x2, y: obj.y1}}
-               to={{x: obj.x2, y: obj.y2}} style={obj.styling}/>
-           <img key={"connection_3_" + index}
-               style={{position: "absolute", top: (obj.y1 - 8) + 'px', left: (obj.x2 - ((obj.x2 - obj.x1)/2)) + 'px'}}
-              src={getTriangle(obj.x1,obj.y1,obj.x2,obj.y2,obj.corner)} />
-         </div>
-
-       ))
+        this.state.connections.map((obj,index) => getConnection(obj,index))
       }
       {
         this.state.objects.map((obj,index) => (
           <div key={"obj_" + index}>
-          <img ondragstart="return false;" className="Editor" key={"obj_" + index} style={{position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px',
-                           width: '50px' , height : '50px'}}
+          <img ondragstart="return false;" className="Editor" key={"obj_" + index}
+                           style={getObjectStyle(obj)}
                            src={imageSrc(obj.objType)} />
           <h4 style={{position: "absolute", top: (obj.y + 25) + 'px', left: (obj.x - (textWidthPixels(obj.name) / 2)) + 'px'}}>
               <span style={{color: bgColors.Black, backgroundColor: bgColors.White}}>{obj.name}</span></h4>

@@ -65,7 +65,6 @@ var Editor = function (_React$Component) {
     //this.sendMessage = this.sendMessage.bind(this)
     _this.addObject = _this.addObject.bind(_this); //Add object like source or sink in editor
     _this.addConnection = _this.addConnection.bind(_this); //Add connection/line between two objects
-    _this.selectObject = _this.selectObject.bind(_this); //select existing object or connection
     _this.handleMouseUp = _this.handleMouseUp.bind(_this); //mouse up event handler, used to add objects
     _this.handleMouseDown = _this.handleMouseDown.bind(_this); //mouse down event used to add connection (so moving mouse will make it larger)
     _this.handleMouseMove = _this.handleMouseMove.bind(_this); //Used to draw connections
@@ -73,6 +72,8 @@ var Editor = function (_React$Component) {
     _this.correctLastConnection = _this.correctLastConnection.bind(_this); //If its valid make sure its connected at predetermined postions
     _this.correctConnection = _this.correctConnection.bind(_this); //correct any connection, so it fits nicely between two objects
     _this.removeLastConnection = _this.removeLastConnection.bind(_this); //If connection is not valid remove it
+    _this.selectObject = _this.selectObject.bind(_this); //Select object at given position, if any
+    _this.deselectAll = _this.deselectAll.bind(_this); //deselect all objects and connections
 
     //receive event from server
     socket.on('serverevent', function (ev_msg) {
@@ -104,7 +105,63 @@ var Editor = function (_React$Component) {
         this.setState(stateCopy);
       }
     }
-    //Mouse is clicked
+
+    //Select object at certain position (if an object exists at the position)
+
+  }, {
+    key: 'selectObject',
+    value: function selectObject(posX, posY) {
+      var _this2 = this;
+
+      var isObjectFound = 0;
+      //Is position at a object? Select it, and deselect the rest
+      this.state.objects.map(function (obj, index) {
+        if (posX > obj.x - 25 && posX < obj.x + 25) {
+          if (posY > obj.y - 25 && posY < obj.y + 25) {
+            //Yes found object, deselect al objects and select current object
+            _this2.deselectAll();
+            obj["selected"] = 1;
+            isObjectFound = 1; //object selected
+          }
+        }
+      });
+
+      //Is position at a connection? Select it, delesecting the rest
+      this.state.connections.map(function (obj, index) {
+
+        if (obj["corner"] == "left") {
+          if (posX < obj.x1 + 5 && posX > obj.x1 - 5 && posY > obj.y1 && posY < obj.y2 || posX > obj.x1 && posX < obj.x2 && posY < obj.y2 + 5 && posY > obj.y2 - 5) {
+            //Yes found object, deselect al objects and select current object
+            _this2.deselectAll();
+            obj["selected"] = 1;
+            obj["corner"] = "right"; //switch corner connection if clicked
+            isObjectFound = 1;
+            _this2.correctConnection(obj); //Beautify it again
+          }
+        }
+        //Right
+        else {
+            var condition1 = posX > obj.x1 && posX < obj.x2 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y1 && posY < obj.y2;
+            var condition2 = posX > obj.x1 && posX < obj.x2 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y2 && posY < obj.y1;
+            var condition3 = posX > obj.x2 && posX < obj.x1 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y2 && posY < obj.y1;
+            var condition4 = posX > obj.x2 && posX < obj.x1 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y1 && posY < obj.y2;
+
+            if (obj.x1 < obj.x2 && obj.y1 < obj.y2 && condition1 || obj.x1 < obj.x2 && obj.y1 > obj.y2 && condition2 || obj.x2 < obj.x1 && obj.y2 < obj.y1 && condition3 || obj.x1 > obj.x2 && obj.y2 > obj.y1 && condition4) {
+              //Yes found object, deselect al objects and select current object
+              _this2.deselectAll();
+              obj["selected"] = 1;
+              obj["corner"] = "left"; //switch corner connection if clicked
+              isObjectFound = 1;
+              _this2.correctConnection(obj); //Beautify it again
+            }
+          }
+      });
+
+      if (isObjectFound == 1) this.forceUpdate();
+      return isObjectFound;
+    }
+
+    //Mouse is clicked down
 
   }, {
     key: 'handleMouseDown',
@@ -114,12 +171,12 @@ var Editor = function (_React$Component) {
         this.addConnection(e.clientX, e.clientY);
       }
     }
-    //Mouse is clicked
+    //Mouse is clicked up
 
   }, {
     key: 'handleMouseUp',
     value: function handleMouseUp(e) {
-      //Stop drawing line if we'r drawing
+      //Stop drawing line if we'r drawing and make the connection line nice after validity check (it has to connect 2 objects)
       if (this.state.drawingline == 1) {
         this.setState({ drawingline: 0 });
         if (this.isLastConnectionValid() == 1) this.correctLastConnection();else this.removeLastConnection();
@@ -134,9 +191,12 @@ var Editor = function (_React$Component) {
           if (e.target.id == "toolbar-play-img" || e.target.id == "toolbar-play-btn") this.setState({ mode: "play" });else if (e.target.id == "toolbar-db-img" || e.target.id == "toolbar-db-btn") this.setState({ mode: "db" });else if (e.target.id == "toolbar-sink-img" || e.target.id == "toolbar-sink-btn") this.setState({ mode: "sink" });else if (e.target.id == "toolbar-connect-img" || e.target.id == "toolbar-connect-btn") this.setState({ mode: "connect" });
           return;
         }
-        //Click in editor add object, except if mode is play which just means the editor is playing, or empty
+        //Click in editor means: add object, except when in play mode or on top of other object
         else {
-            if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect") this.addObject(e.clientX, e.clientY);
+            if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect") {
+              if (this.selectObject(e.clientX, e.clientY) == 0) //Select object in case we clicked on it (or on a connection)
+                this.addObject(e.clientX, e.clientY);
+            }
           }
     }
   }, {
@@ -260,12 +320,25 @@ var Editor = function (_React$Component) {
       this.setState({ connections: stateCopy.connections });
     }
 
+    //Deselect all objects and connections
+
+  }, {
+    key: 'deselectAll',
+    value: function deselectAll() {
+      this.state.objects.map(function (obj, index) {
+        obj["selected"] = 0;
+      });
+      this.state.connections.map(function (obj, index) {
+        obj["selected"] = 0;
+      });
+    }
     //Add object in Editor
 
   }, {
     key: 'addObject',
     value: function addObject(x, y) {
-      this.state.objects.push({ name: "Change this", x: x, y: y, objType: this.state.mode });
+      this.deselectAll();
+      this.state.objects.push({ name: "Change this", x: x, y: y, objType: this.state.mode, selected: 0 });
       this.forceUpdate();
     }
     //Add connection between two objects
@@ -273,14 +346,10 @@ var Editor = function (_React$Component) {
   }, {
     key: 'addConnection',
     value: function addConnection(x, y) {
-      this.state.connections.push({ x1: x, y1: y, x2: x, y2: y, styling: "1px solid black", corner: "right" });
+      this.deselectAll();
+      this.state.connections.push({ x1: x, y1: y, x2: x, y2: y, styling: "1px solid black", corner: "right", selected: 0 });
       this.setState({ drawingline: 1 });
       this.forceUpdate();
-    }
-  }, {
-    key: 'selectObject',
-    value: function selectObject() {
-      return;
     }
 
     //shouldComponentUpdate(nextProps, nextState) {
@@ -388,7 +457,56 @@ var Editor = function (_React$Component) {
         if (corner == "right") {
           if (x2 > x1) return "images/triangle-right.png";else return "images/triangle-left.png";
         } else {
-          if (y2 > y1) return "images/triangle-up.png";else return "images/triangle-down.png";
+          if (y2 > y1) return "images/triangle-down.png";else return "images/triangle-up.png";
+        }
+      };
+
+      //Get object style, which is the same except when selected
+      var getObjectStyle = function getObjectStyle(obj) {
+        var result = { position: "absolute", top: obj.y - 25 + 'px', left: obj.x - 25 + 'px', width: '50px', height: '50px' };
+        if (obj.selected == 1) result["outline"] = '6px dotted white';
+
+        return result;
+      };
+
+      //Get style for the connection objects
+      var getConnectionStyle = function getConnectionStyle(obj) {
+        var result;
+        if (obj.selected == 1) result = "1px dotted orange";else result = "1px solid black";
+
+        return result;
+      };
+
+      //Based on the connection object render the connection lines and triangle
+      var getConnection = function getConnection(obj, index) {
+        if (obj["corner"] == "right") {
+          return _react2.default.createElement(
+            'div',
+            { key: "connection_" + index },
+            _react2.default.createElement(_Line2.default, { key: "connection_1_" + index,
+              from: { x: obj.x1, y: obj.y1 },
+              to: { x: obj.x2, y: obj.y1 }, style: getConnectionStyle(obj) }),
+            _react2.default.createElement(_Line2.default, { key: "connection_2_" + index,
+              from: { x: obj.x2, y: obj.y1 },
+              to: { x: obj.x2, y: obj.y2 }, style: getConnectionStyle(obj) }),
+            _react2.default.createElement('img', { key: "connection_3_" + index,
+              style: { position: "absolute", top: obj.y1 - 8 + 'px', left: obj.x2 - (obj.x2 - obj.x1) / 2 + 'px' },
+              src: getTriangle(obj.x1, obj.y1, obj.x2, obj.y2, obj.corner) })
+          );
+        } else {
+          return _react2.default.createElement(
+            'div',
+            { key: "connection_" + index },
+            _react2.default.createElement(_Line2.default, { key: "connection_1_" + index,
+              from: { x: obj.x1, y: obj.y1 },
+              to: { x: obj.x1, y: obj.y2 }, style: getConnectionStyle(obj) }),
+            _react2.default.createElement(_Line2.default, { key: "connection_2_" + index,
+              from: { x: obj.x1, y: obj.y2 },
+              to: { x: obj.x2, y: obj.y2 }, style: getConnectionStyle(obj) }),
+            _react2.default.createElement('img', { key: "connection_3_" + index,
+              style: { position: "absolute", top: obj.y2 - (obj.y2 - obj.y1) / 2 + 'px', left: obj.x1 - 8 + 'px' },
+              src: getTriangle(obj.x1, obj.y1, obj.x2, obj.y2, obj.corner) })
+          );
         }
       };
 
@@ -396,26 +514,14 @@ var Editor = function (_React$Component) {
         'div',
         { className: 'Editor', id: 'editor' },
         this.state.connections.map(function (obj, index) {
-          return _react2.default.createElement(
-            'div',
-            { key: "connection_" + index },
-            _react2.default.createElement(_Line2.default, { key: "connection_1_" + index,
-              from: { x: obj.x1, y: obj.y1 },
-              to: { x: obj.x2, y: obj.y1 }, style: obj.styling }),
-            _react2.default.createElement(_Line2.default, { key: "connection_2_" + index,
-              from: { x: obj.x2, y: obj.y1 },
-              to: { x: obj.x2, y: obj.y2 }, style: obj.styling }),
-            _react2.default.createElement('img', { key: "connection_3_" + index,
-              style: { position: "absolute", top: obj.y1 - 8 + 'px', left: obj.x2 - (obj.x2 - obj.x1) / 2 + 'px' },
-              src: getTriangle(obj.x1, obj.y1, obj.x2, obj.y2, obj.corner) })
-          );
+          return getConnection(obj, index);
         }),
         this.state.objects.map(function (obj, index) {
           return _react2.default.createElement(
             'div',
             { key: "obj_" + index },
-            _react2.default.createElement('img', { ondragstart: 'return false;', className: 'Editor', key: "obj_" + index, style: { position: "absolute", top: obj.y - 25 + 'px', left: obj.x - 25 + 'px',
-                width: '50px', height: '50px' },
+            _react2.default.createElement('img', { ondragstart: 'return false;', className: 'Editor', key: "obj_" + index,
+              style: getObjectStyle(obj),
               src: imageSrc(obj.objType) }),
             _react2.default.createElement(
               'h4',
