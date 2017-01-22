@@ -32,34 +32,40 @@ class MyBar extends React.Component {
   //Click Toolbar button event lsnr
   clickBtn(e) {
 
-        let mode = e.target.id
+        var mode = ""
+        if (e.target.id == "toolbar-play-img" || e.target.id == "toolbar-play-btn") mode = "play"
+        else if (e.target.id == "toolbar-db-img" || e.target.id == "toolbar-db-btn") mode = "db"
+        else if (e.target.id == "toolbar-sink-img" || e.target.id == "toolbar-sink-btn") mode = "sink"
+        else if (e.target.id == "toolbar-connect-img" || e.target.id == "toolbar-connect-btn") mode = "connect"
+
         console.log("CLICKED " + mode);
+
         this.setState( { mode: mode})
   }
 
   playBtn(){
-    if (this.state.mode == "toolbar-play-img")
-      return  <button style={{border: "5px"}} id="toolbar-play-btn"><img id="toolbar-play-img" src="/images/play.png" alt="Play, run this flow ongoing" onClick={this.clickBtn} width="32" height="23" /></button>
+    if (this.state.mode == "play")
+      return  <button style={{border: "5px"}} id="toolbar-play-btn"><img id="toolbar-play-img" src="/images/play.png" alt="Play, run this flow ongoing" width="32" height="23" /></button>
     else
-      return  <button id="toolbar-play-btn"><img id="toolbar-play-img" src="/images/play.png" alt="Play, run this flow ongoing" onClick={this.clickBtn} width="32" height="23" /></button>
+      return  <button id="toolbar-play-btn"><img id="toolbar-play-img" src="/images/play.png" alt="Play, run this flow ongoing" width="32" height="23" /></button>
   }
   dbBtn(){
-    if (this.state.mode == "toolbar-db-img")
-      return  <button style={{border: "5px"}} id="toolbar-db-btn"><img id="toolbar-db-img" src="/images/db.png" alt="Database, data source" onClick={this.clickBtn} width="32" height="23" /></button>
+    if (this.state.mode == "db")
+      return  <button style={{border: "5px"}} id="toolbar-db-btn"><img id="toolbar-db-img" src="/images/db.png" alt="Database, data source"  width="32" height="23" /></button>
     else
-      return  <button id="toolbar-db-btn"><img id="toolbar-db-img" src="/images/db.png" alt="Database, data source" onClick={this.clickBtn} width="32" height="23" /></button>
+      return  <button id="toolbar-db-btn"><img id="toolbar-db-img" src="/images/db.png" alt="Database, data source" width="32" height="23" /></button>
   }
   sinkBtn(){
-    if (this.state.mode == "toolbar-sink-img")
-      return <button style={{border: "5px"}} id="toolbar-sink-btn"><img id="toolbar-sink-img" src="/images/sink.png" alt="Sink, data target" onClick={this.clickBtn} width="32" height="23" /></button>
+    if (this.state.mode == "sink")
+      return <button style={{border: "5px"}} id="toolbar-sink-btn"><img id="toolbar-sink-img" src="/images/sink.png" alt="Sink, data target"  width="32" height="23" /></button>
     else
-      return  <button id="toolbar-sink-btn"><img id="toolbar-sink-img" src="/images/sink.png" alt="Sink, data target" onClick={this.clickBtn} width="32" height="23" /></button>
+      return  <button id="toolbar-sink-btn"><img id="toolbar-sink-img" src="/images/sink.png" alt="Sink, data target"  width="32" height="23" /></button>
   }
   connectBtn(){
-    if (this.state.mode == "toolbar-connect-img")
-      return <button style={{border: "5px"}} id="toolbar-connect-btn"><img id="toolbar-connect-img" src="/images/connect.png" alt="Connect, conncecting sources and sinks" onClick={this.clickBtn} width="32" height="23" /></button>
+    if (this.state.mode == "connect")
+      return <button style={{border: "5px"}} id="toolbar-connect-btn"><img id="toolbar-connect-img" src="/images/connect.png" alt="Connect, conncecting sources and sinks" width="32" height="23" /></button>
     else
-      return  <button id="toolbar-connect-btn"><img id="toolbar-connect-img" src="/images/connect.png" alt="Connect, conncecting sources and sinks" onClick={this.clickBtn} width="32" height="23" /></button>
+      return  <button id="toolbar-connect-btn"><img id="toolbar-connect-img" src="/images/connect.png" alt="Connect, conncecting sources and sinks"  width="32" height="23" /></button>
     }
 
   dataAdmiralLogo() {
@@ -67,7 +73,7 @@ class MyBar extends React.Component {
   }
   render() {
     return (
-      <div className="Toolbar" >
+      <div onClick={this.clickBtn} className="Toolbar" >
         <Toolbar >
             <Region id="toolbar">
               {this.playBtn()}{this.dbBtn()}{this.sinkBtn()}{this.connectBtn()}

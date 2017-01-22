@@ -71,7 +71,7 @@ class Editor extends React.Component {
   //Mouse is clicked
   handleMouseDown  (e) {
     //Users wants to draw a connect Line,
-    if (this.state.mode == "toolbar-connect-img" && e.target.id == "") {
+    if (this.state.mode == "connect" && e.target.id == "") {
       this.addConnection(e.clientX,e.clientY)
     }
   }
@@ -93,12 +93,15 @@ class Editor extends React.Component {
     //Toolbar button changes mode
     else if (e.target.id != "") {
        //"toolbar-play-img"
-        this.setState({mode: e.target.id})
+        if (e.target.id == "toolbar-play-img" || e.target.id == "toolbar-play-btn") this.setState({mode: "play"})
+        else if (e.target.id == "toolbar-db-img" || e.target.id == "toolbar-db-btn") this.setState({mode: "db"})
+        else if (e.target.id == "toolbar-sink-img" || e.target.id == "toolbar-sink-btn") this.setState({mode: "sink"})
+        else if (e.target.id == "toolbar-connect-img" || e.target.id == "toolbar-connect-btn") this.setState({mode: "connect"})
         return
       }
     //Click in editor add object, except if mode is play which just means the editor is playing, or empty
     else {
-      if (this.state.mode != "toolbar-play-img" && this.state.mode != "" && this.state.mode != "toolbar-connect-img")
+      if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect")
         this.addObject(e.clientX,e.clientY)
     }
   }
@@ -299,16 +302,16 @@ class Editor extends React.Component {
      var imageSrc = function (objType) {
        let result;
        switch (objType) {
-         case "toolbar-play-img":
+         case "play":
             result = "images/play.png"
             break;
-         case "toolbar-db-img":
+         case "db":
             result = "images/db.png"
             break;
-          case "toolbar-sink-img":
+          case "sink":
              result = "images/sink.png"
              break;
-          case "toolbar-connect-img":
+          case "connect":
              result = "images/connect.png"
              break;
         }
