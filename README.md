@@ -35,6 +35,7 @@ npm install --save-dev babel-preset-stage-1
 npm install --save-dev babel-preset-stage-0
 npm install --save babel-plugin-transform-decorators-legacy
 npm install react-simple-toolbar --save
+npm install --save-dev babel-preset-es2015-ie
 
 
 ```
@@ -63,6 +64,7 @@ npm install --save jade
 From the Editor/application dir:
 ```
 babel js/source -d js/build
+NODE_ENV=production    (for production only, required for way better performance!)
 browserify js/build/app.js -o bundle.js
 LINUX: cat css/*/* css/*.css | sed 's/..\/..\/images/images/g' > bundle.css
 Windows: type css\components\* css\* > bundle.css

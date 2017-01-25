@@ -10,6 +10,10 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _reactKeydown = require('react-keydown');
+
+var _reactKeydown2 = _interopRequireDefault(_reactKeydown);
+
 var _reactDom = require('react-dom');
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
@@ -46,6 +50,7 @@ var bgColors = { "Default": "#81b71a",
 //console.log("Client is using this name: " + user  );
 
 //The editor is the yellow editor field in which the user will add objects and connections.
+//@keydown
 
 var Editor = function (_React$Component) {
   _inherits(Editor, _React$Component);
@@ -70,12 +75,14 @@ var Editor = function (_React$Component) {
     _this.handleMouseUp = _this.handleMouseUp.bind(_this); //mouse up event handler, used to add objects
     _this.handleMouseDown = _this.handleMouseDown.bind(_this); //mouse down event used to add connection (so moving mouse will make it larger)
     _this.handleMouseMove = _this.handleMouseMove.bind(_this); //Used to draw connections
+    _this.handleKeyDown = _this.handleKeyDown.bind(_this); //keydown, eg to delete objects
     _this.isLastConnectionValid = _this.isLastConnectionValid.bind(_this); //Is connection between two objects and thus valid
     _this.correctLastConnection = _this.correctLastConnection.bind(_this); //If its valid make sure its connected at predetermined postions
     _this.correctConnection = _this.correctConnection.bind(_this); //correct any connection, so it fits nicely between two objects
     _this.removeLastConnection = _this.removeLastConnection.bind(_this); //If connection is not valid remove it
     _this.selectObject = _this.selectObject.bind(_this); //Select object at given position, if any
     _this.deselectAll = _this.deselectAll.bind(_this); //deselect all objects and connections
+    _this.deleteSelectedObject = _this.deleteSelectedObject.bind(_this); //delete selected object/connections or connection (after delete key press)
 
     //receive event from server
     socket.on('serverevent', function (ev_msg) {
@@ -92,6 +99,14 @@ var Editor = function (_React$Component) {
     return _this;
   }
 
+  /*
+    @keydown( 'enter' ) // or specify `which` code directly, in this case 13
+      submit( event ) {
+        // do something, or not, with the keydown event, maybe event.preventDefault()
+        console.log("YES")
+      }
+  */
+
   //Mouse is moved
 
 
@@ -101,16 +116,18 @@ var Editor = function (_React$Component) {
       var _this2 = this;
 
       if (this.state.movingObject != 0) {
-        var stateCopy = Object.assign({}, this.state);
-        var lastSelectedObject = stateCopy.selectedObject;
+        //var stateCopy = Object.assign({}, this.state);
+        //var lastSelectedObject = stateCopy.selectedObject
+        var lastSelectedObject = this.state.selectedObject;
         lastSelectedObject.x = e.clientX;
         lastSelectedObject.y = e.clientY;
         //Check all connections if the are related to the slected object and make them fit nicely while moving
         lastSelectedObject.connectedConnections.map(function (obj, index) {
           _this2.correctConnection(obj);
         });
-        //this.correctConnection(lastSelectedObject)
-        this.setState(stateCopy);
+
+        //this.setState(stateCopy);
+        this.setState({ selectedObject: lastSelectedObject });
       } else if (this.state.drawingline == 1) {
         //Use is drawing line, make line larger
         var stateCopy = Object.assign({}, this.state);
@@ -235,6 +252,21 @@ var Editor = function (_React$Component) {
             }
           }
     }
+
+    //keypress reveived
+
+  }, {
+    key: 'handleKeyDown',
+    value: function handleKeyDown(event) {
+      console.log("Key press");
+
+      if (event) {
+        //Delete key
+        if (event.which == 46) {
+          this.deleteSelectedObject();
+        }
+      }
+    }
   }, {
     key: 'componentWillMount',
     value: function componentWillMount() {
@@ -242,8 +274,44 @@ var Editor = function (_React$Component) {
       document.addEventListener('mouseup', self.handleMouseUp, false); //click
       document.addEventListener('mousedown', self.handleMouseDown, false);
       document.addEventListener('mousemove', self.handleMouseMove, false);
+      document.addEventListener('keydown', self.handleKeyDown, false);
     }
+  }, {
+    key: 'deleteSelectedObject',
+    value: function deleteSelectedObject() {
+      var stateCopy = Object.assign({}, this.state);
 
+      var so = stateCopy.selectedObject;
+
+      //There is a selected objects let kill it
+      if (so != 0) {
+
+        //Does it have connected connections remove these also
+        if (so.connectedConnections) {
+          so.connectedConnections.map(function (obj, index) {
+            var index = stateCopy.connections.indexOf(obj);
+            if (index > -1) {
+              stateCopy.connections.splice(index, 1);
+            }
+          });
+        }
+
+        //Remove the object itself (or connection if its not an object)
+        var index = stateCopy.objects.indexOf(so);
+        if (index > -1) {
+          stateCopy.objects.splice(index, 1);
+        }
+        index = stateCopy.connections.indexOf(so);
+        if (index > -1) {
+          stateCopy.connections.splice(index, 1);
+        }
+
+        this.setState(stateCopy);
+      }
+
+      //this.state.objects.map((obj,index) => {})
+      //this.state.connections.map((obj,index) => {})
+    }
     //Is last connection between two objects valid? 0 = No , 1 = Yes
 
   }, {
@@ -454,6 +522,7 @@ var Editor = function (_React$Component) {
       document.removeEventListener('mouseup', this.handleMouseUp, false); //click
       document.removeEventListener('mousedown', this.handleMouseUp, false);
       document.removeEventListener('mousemove', this.handleMouseMove, false);
+      document.removeEventListener('keydown', this.handleKeyDown, false);
     }
 
     //Send event message to server, for example to let others know we change our line direction
@@ -593,11 +662,10 @@ var Editor = function (_React$Component) {
 }(_react2.default.Component);
 
 Editor.propTypes = {
-  //url: React.PropTypes.string,  //Not yet used, at some point backend will be added
-};
+  url: _react2.default.PropTypes.string };
 
 Editor.defaultProps = {
-  //url: "http://localhost:3000/pandaweb/all",
+  url: "http://localhost:3000/pandaweb/all"
 };
 
 exports.default = Editor;

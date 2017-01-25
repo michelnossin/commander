@@ -1,4 +1,5 @@
 import React from 'react';
+import keydown from 'react-keydown';
 import ReactDOM from 'react-dom';
 import Line from './Line';
 import io from 'socket.io-client'
@@ -19,6 +20,7 @@ var bgColors = { "Default": "#81b71a",
 //console.log("Client is using this name: " + user  );
 
 //The editor is the yellow editor field in which the user will add objects and connections.
+//@keydown
 class Editor extends React.Component {
 
   constructor(props) {
@@ -39,12 +41,14 @@ class Editor extends React.Component {
     this.handleMouseUp = this.handleMouseUp.bind(this)  //mouse up event handler, used to add objects
     this.handleMouseDown = this.handleMouseDown.bind(this)  //mouse down event used to add connection (so moving mouse will make it larger)
     this.handleMouseMove = this.handleMouseMove.bind(this)  //Used to draw connections
+    this.handleKeyDown = this.handleKeyDown.bind(this)  //keydown, eg to delete objects
     this.isLastConnectionValid = this.isLastConnectionValid.bind(this) //Is connection between two objects and thus valid
     this.correctLastConnection = this.correctLastConnection.bind(this) //If its valid make sure its connected at predetermined postions
     this.correctConnection = this.correctConnection.bind(this) //correct any connection, so it fits nicely between two objects
     this.removeLastConnection = this.removeLastConnection.bind(this) //If connection is not valid remove it
     this.selectObject = this.selectObject.bind(this) //Select object at given position, if any
     this.deselectAll = this.deselectAll.bind(this) //deselect all objects and connections
+    this.deleteSelectedObject = this.deleteSelectedObject.bind(this) //delete selected object/connections or connection (after delete key press)
 
     //receive event from server
     socket.on('serverevent', ev_msg => {
@@ -60,19 +64,29 @@ class Editor extends React.Component {
     })
   }
 
+/*
+  @keydown( 'enter' ) // or specify `which` code directly, in this case 13
+    submit( event ) {
+      // do something, or not, with the keydown event, maybe event.preventDefault()
+      console.log("YES")
+    }
+*/
+
   //Mouse is moved
   handleMouseMove  (e) {
     if (this.state.movingObject != 0) {
-      var stateCopy = Object.assign({}, this.state);
-      var lastSelectedObject = stateCopy.selectedObject
+      //var stateCopy = Object.assign({}, this.state);
+      //var lastSelectedObject = stateCopy.selectedObject
+      var lastSelectedObject = this.state.selectedObject
       lastSelectedObject.x = e.clientX;
       lastSelectedObject.y = e.clientY;
       //Check all connections if the are related to the slected object and make them fit nicely while moving
       lastSelectedObject.connectedConnections.map((obj,index) => {
         this.correctConnection(obj)
       })
-      //this.correctConnection(lastSelectedObject)
-      this.setState(stateCopy);
+
+      //this.setState(stateCopy);
+      this.setState({ selectedObject : lastSelectedObject});
     }
     else if (this.state.drawingline == 1) {
       //Use is drawing line, make line larger
@@ -222,13 +236,64 @@ class Editor extends React.Component {
     }
   }
 
+
+  //keypress reveived
+    handleKeyDown(event) {
+      console.log("Key press")
+
+      if ( event ) {
+        //Delete key
+        if (event.which == 46) {
+            this.deleteSelectedObject()
+        }
+    }
+  }
+
+
   componentWillMount  () {
       let self = this
       document.addEventListener('mouseup', self.handleMouseUp, false); //click
       document.addEventListener('mousedown', self.handleMouseDown, false);
       document.addEventListener('mousemove', self.handleMouseMove, false);
+      document.addEventListener('keydown', self.handleKeyDown, false);
     }
 
+  deleteSelectedObject() {
+    var stateCopy = Object.assign({}, this.state);
+
+    let so = stateCopy.selectedObject
+
+    //There is a selected objects let kill it
+    if (so != 0) {
+
+        //Does it have connected connections remove these also
+        if (so.connectedConnections) {
+          so.connectedConnections.map((obj,index) => {
+            var index = stateCopy.connections.indexOf(obj);
+            if (index > -1) {
+              stateCopy.connections.splice(index, 1);
+            }
+          })
+        }
+
+        //Remove the object itself (or connection if its not an object)
+        var index = stateCopy.objects.indexOf(so);
+        if (index > -1) {
+          stateCopy.objects.splice(index, 1);
+        }
+        index = stateCopy.connections.indexOf(so);
+        if (index > -1) {
+          stateCopy.connections.splice(index, 1);
+        }
+
+        this.setState(stateCopy)
+
+    }
+
+    //this.state.objects.map((obj,index) => {})
+    //this.state.connections.map((obj,index) => {})
+
+  }
   //Is last connection between two objects valid? 0 = No , 1 = Yes
   isLastConnectionValid() {
     var stateCopy = Object.assign({}, this.state);
@@ -422,6 +487,7 @@ class Editor extends React.Component {
     document.removeEventListener('mouseup', this.handleMouseUp, false); //click
     document.removeEventListener('mousedown', this.handleMouseUp, false);
     document.removeEventListener('mousemove', this.handleMouseMove, false);
+    document.removeEventListener('keydown', this.handleKeyDown, false);
 
   }
 
@@ -563,11 +629,11 @@ class Editor extends React.Component {
 }
 
 Editor.propTypes = {
-    //url: React.PropTypes.string,  //Not yet used, at some point backend will be added
+    url: React.PropTypes.string,  //Not yet used, at some point backend will be added
 };
 
 Editor.defaultProps = {
-    //url: "http://localhost:3000/pandaweb/all",
+    url: "http://localhost:3000/pandaweb/all",
 };
 
 export default Editor;
