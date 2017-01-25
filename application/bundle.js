@@ -349,13 +349,12 @@ var Editor = function (_React$Component) {
         lastSelectedObject.x = e.clientX;
         lastSelectedObject.y = e.clientY;
         //Check all connections if the are related to the slected object and make them fit nicely while moving
-        this.state.connections.map(function (obj, index) {
-          if (obj["from"] == lastSelectedObject || obj["to"] == lastSelectedObject) _this2.correctConnection(obj);
+        lastSelectedObject.connectedConnections.map(function (obj, index) {
+          _this2.correctConnection(obj);
         });
         //this.correctConnection(lastSelectedObject)
         this.setState(stateCopy);
-      }
-      if (this.state.drawingline == 1) {
+      } else if (this.state.drawingline == 1) {
         //Use is drawing line, make line larger
         var stateCopy = Object.assign({}, this.state);
         var lastLine = stateCopy.connections[stateCopy.connections.length - 1];
@@ -380,10 +379,6 @@ var Editor = function (_React$Component) {
             //Yes found object, deselect al objects and select current object
             _this3.deselectAll();
             obj["selected"] = 1;
-            //var stateCopy = Object.assign({}, this.state);
-            //stateCopy.selectedObject = obj
-            //stateCopy.movingObject = 1
-            //this.setState(stateCopy);
             _this3.setState({ selectedObject: obj });
             isObjectFound = 1; //object selected
           }
@@ -522,6 +517,8 @@ var Editor = function (_React$Component) {
       //In case both are this last line is correct
       if (startPointCorrect == 1 && endPointCorrect == 1) {
         lastLine["corner"] = "right";
+        lastLine["to"].connectedConnections.push(lastLine);
+        lastLine["from"].connectedConnections.push(lastLine);
         this.setState({ connections: stateCopy.connections });
         return 1;
       }
@@ -543,7 +540,7 @@ var Editor = function (_React$Component) {
 
       return correctConnection;
     }(function (c) {
-      var stateCopy = Object.assign({}, this.state);
+      //var stateCopy = Object.assign({}, this.state);
       //var lastLine = stateCopy.connections[stateCopy.connections.length-1]
       if (c.x2 > c.x1 && c.y2 > c.y1) {
         if (c.corner == "left") {
@@ -605,7 +602,9 @@ var Editor = function (_React$Component) {
             correctConnection(c);
           }
         }
-      this.setState({ connections: stateCopy.connections });
+      if (this.state.movingObject == 0) //While moving do not refresh the screen.
+        this.forceUpdate();
+      //this.setState({connections : stateCopy.connections})
     })
     //If last connection is correct we need to correct it so its connecting at correct positions
 
@@ -643,7 +642,7 @@ var Editor = function (_React$Component) {
     key: 'addObject',
     value: function addObject(x, y) {
       this.deselectAll();
-      this.state.objects.push({ name: "Change this", x: x, y: y, objType: this.state.mode, selected: 0 });
+      this.state.objects.push({ name: "Change this", x: x, y: y, objType: this.state.mode, selected: 0, connectedConnections: [] });
       this.forceUpdate();
     }
     //Add connection between two objects
