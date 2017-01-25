@@ -286,17 +286,7 @@ var Editor = function (_React$Component) {
 
   }, {
     key: 'correctConnection',
-    value: function (_correctConnection) {
-      function correctConnection(_x) {
-        return _correctConnection.apply(this, arguments);
-      }
-
-      correctConnection.toString = function () {
-        return _correctConnection.toString();
-      };
-
-      return correctConnection;
-    }(function (c) {
+    value: function correctConnection(c) {
       //var stateCopy = Object.assign({}, this.state);
       //var lastLine = stateCopy.connections[stateCopy.connections.length-1]
       if (c.x2 > c.x1 && c.y2 > c.y1) {
@@ -356,13 +346,13 @@ var Editor = function (_React$Component) {
             c.y1 = c.from.y;
             c.x2 = c.to.x;
             c.y2 = c.to.y;
-            correctConnection(c);
+            this.correctConnection(c);
           }
         }
       if (this.state.movingObject == 0) //While moving do not refresh the screen.
         this.forceUpdate();
       //this.setState({connections : stateCopy.connections})
-    })
+    }
     //If last connection is correct we need to correct it so its connecting at correct positions
 
   }, {

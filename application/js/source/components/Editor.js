@@ -334,7 +334,7 @@ class Editor extends React.Component {
         c.y1 = c.from.y
         c.x2 = c.to.x
         c.y2 = c.to.y
-        correctConnection(c)
+        this.correctConnection(c)
       }
     }
     if (this.state.movingObject == 0 ) //While moving do not refresh the screen.
