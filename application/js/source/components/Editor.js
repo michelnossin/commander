@@ -28,7 +28,9 @@ class Editor extends React.Component {
         mode : "", //Which toolbar button is pressed determines the mode (like play , source etc)
         objects : [],  //list of all objects drawn in the editor
         connections : [], //list of all connections (lines) between the objects
-        drawingline: 0  //set to 1 while use is drawing a line, used by mousemove event
+        drawingline: 0,  //set to 1 while use is drawing a line, used by mousemove event
+        selectedObject: 0,  //Set object reference last selected (also connections), or 0 if non
+        movingObject: 0   //set to 1 if we are moving an object (non connection)
     };
 
     //this.sendMessage = this.sendMessage.bind(this)
@@ -60,6 +62,19 @@ class Editor extends React.Component {
 
   //Mouse is moved
   handleMouseMove  (e) {
+    if (this.state.movingObject != 0) {
+      var stateCopy = Object.assign({}, this.state);
+      var lastSelectedObject = stateCopy.selectedObject
+      lastSelectedObject.x = e.clientX;
+      lastSelectedObject.y = e.clientY;
+      //Check all connections if the are related to the slected object and make them fit nicely while moving
+      this.state.connections.map((obj,index) => {
+        if (obj["from"] == lastSelectedObject || obj["to"] == lastSelectedObject)
+          this.correctConnection(obj)
+      })
+      //this.correctConnection(lastSelectedObject)
+      this.setState(stateCopy);
+    }
     if (this.state.drawingline == 1) {
       //Use is drawing line, make line larger
       var stateCopy = Object.assign({}, this.state);
@@ -82,6 +97,11 @@ class Editor extends React.Component {
           //Yes found object, deselect al objects and select current object
           this.deselectAll()
           obj["selected"] = 1
+          //var stateCopy = Object.assign({}, this.state);
+          //stateCopy.selectedObject = obj
+          //stateCopy.movingObject = 1
+          //this.setState(stateCopy);
+          this.setState({ selectedObject : obj})
           isObjectFound = 1 //object selected
         }
       }
@@ -109,6 +129,8 @@ class Editor extends React.Component {
              //Yes found object, deselect al objects and select current object
              this.deselectAll()
              obj["selected"] = 1
+             this.setState({ selectedObject : obj})
+
              obj["corner"] = "right"  //switch corner connection if clicked
              isObjectFound = 1
              this.correctConnection(obj) //Beautify it again
@@ -134,6 +156,7 @@ class Editor extends React.Component {
              //Yes found object, deselect al objects and select current object
              this.deselectAll()
              obj["selected"] = 1
+             this.setState({ selectedObject : obj})
              obj["corner"] = "left"  //switch corner connection if clicked
              isObjectFound = 1
              this.correctConnection(obj) //Beautify it again
@@ -152,15 +175,30 @@ class Editor extends React.Component {
     if (this.state.mode == "connect" && e.target.id == "") {
       this.addConnection(e.clientX,e.clientY)
     }
+    //Click in editor means: add object, except when in play mode or on top of other object
+    else {
+      if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect") {
+        if (this.selectObject(e.clientX,e.clientY) != 0) //Select object in case we clicked on it (or on a connection)
+          this.setState({ movingObject : 1})
+        else
+          this.setState({ selectedObject : 0})
+
+        }
+
+    }
 
   }
   //Mouse is clicked up
   handleMouseUp  (e) {
+
+    if (this.state.movingObject != 0) {
+      this.setState({ movingObject : 0})
+    }
     //Stop drawing line if we'r drawing and make the connection line nice after validity check (it has to connect 2 objects)
     if (this.state.drawingline == 1) {
       this.setState ({drawingline: 0})
       if (this.isLastConnectionValid() == 1)
-        this.correctLastConnection()
+        this.correctLastConnection() //Make it fit nicely to the objects
       else
         this.removeLastConnection()
 
@@ -181,7 +219,8 @@ class Editor extends React.Component {
     //Click in editor means: add object, except when in play mode or on top of other object
     else {
       if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect") {
-        if (this.selectObject(e.clientX,e.clientY) == 0) //Select object in case we clicked on it (or on a connection)
+        //if (this.selectObject(e.clientX,e.clientY) == 0) //Select object in case we clicked on it (or on a connection)
+        if (this.state.selectedObject == 0)
           this.addObject(e.clientX,e.clientY)
 
         }

@@ -59,7 +59,9 @@ var Editor = function (_React$Component) {
       mode: "", //Which toolbar button is pressed determines the mode (like play , source etc)
       objects: [], //list of all objects drawn in the editor
       connections: [], //list of all connections (lines) between the objects
-      drawingline: 0 //set to 1 while use is drawing a line, used by mousemove event
+      drawingline: 0, //set to 1 while use is drawing a line, used by mousemove event
+      selectedObject: 0, //Set object reference last selected (also connections), or 0 if non
+      movingObject: 0 //set to 1 if we are moving an object (non connection)
     };
 
     //this.sendMessage = this.sendMessage.bind(this)
@@ -96,6 +98,20 @@ var Editor = function (_React$Component) {
   _createClass(Editor, [{
     key: 'handleMouseMove',
     value: function handleMouseMove(e) {
+      var _this2 = this;
+
+      if (this.state.movingObject != 0) {
+        var stateCopy = Object.assign({}, this.state);
+        var lastSelectedObject = stateCopy.selectedObject;
+        lastSelectedObject.x = e.clientX;
+        lastSelectedObject.y = e.clientY;
+        //Check all connections if the are related to the slected object and make them fit nicely while moving
+        this.state.connections.map(function (obj, index) {
+          if (obj["from"] == lastSelectedObject || obj["to"] == lastSelectedObject) _this2.correctConnection(obj);
+        });
+        //this.correctConnection(lastSelectedObject)
+        this.setState(stateCopy);
+      }
       if (this.state.drawingline == 1) {
         //Use is drawing line, make line larger
         var stateCopy = Object.assign({}, this.state);
@@ -111,7 +127,7 @@ var Editor = function (_React$Component) {
   }, {
     key: 'selectObject',
     value: function selectObject(posX, posY) {
-      var _this2 = this;
+      var _this3 = this;
 
       var isObjectFound = 0;
       //Is position at a object? Select it, and deselect the rest
@@ -119,8 +135,13 @@ var Editor = function (_React$Component) {
         if (posX > obj.x - 25 && posX < obj.x + 25) {
           if (posY > obj.y - 25 && posY < obj.y + 25) {
             //Yes found object, deselect al objects and select current object
-            _this2.deselectAll();
+            _this3.deselectAll();
             obj["selected"] = 1;
+            //var stateCopy = Object.assign({}, this.state);
+            //stateCopy.selectedObject = obj
+            //stateCopy.movingObject = 1
+            //this.setState(stateCopy);
+            _this3.setState({ selectedObject: obj });
             isObjectFound = 1; //object selected
           }
         }
@@ -137,11 +158,13 @@ var Editor = function (_React$Component) {
 
           if (obj.x1 < obj.x2 && obj.y1 < obj.y2 && condition1 || obj.x1 < obj.x2 && obj.y1 > obj.y2 && condition2 || obj.x2 < obj.x1 && obj.y2 < obj.y1 && condition3 || obj.x1 > obj.x2 && obj.y2 > obj.y1 && condition4) {
             //Yes found object, deselect al objects and select current object
-            _this2.deselectAll();
+            _this3.deselectAll();
             obj["selected"] = 1;
+            _this3.setState({ selectedObject: obj });
+
             obj["corner"] = "right"; //switch corner connection if clicked
             isObjectFound = 1;
-            _this2.correctConnection(obj); //Beautify it again
+            _this3.correctConnection(obj); //Beautify it again
           }
         }
         //Right
@@ -153,11 +176,12 @@ var Editor = function (_React$Component) {
 
             if (obj.x1 < obj.x2 && obj.y1 < obj.y2 && _condition || obj.x1 < obj.x2 && obj.y1 > obj.y2 && _condition2 || obj.x2 < obj.x1 && obj.y2 < obj.y1 && _condition3 || obj.x1 > obj.x2 && obj.y2 > obj.y1 && _condition4) {
               //Yes found object, deselect al objects and select current object
-              _this2.deselectAll();
+              _this3.deselectAll();
               obj["selected"] = 1;
+              _this3.setState({ selectedObject: obj });
               obj["corner"] = "left"; //switch corner connection if clicked
               isObjectFound = 1;
-              _this2.correctConnection(obj); //Beautify it again
+              _this3.correctConnection(obj); //Beautify it again
             }
           }
       });
@@ -175,16 +199,28 @@ var Editor = function (_React$Component) {
       if (this.state.mode == "connect" && e.target.id == "") {
         this.addConnection(e.clientX, e.clientY);
       }
+      //Click in editor means: add object, except when in play mode or on top of other object
+      else {
+          if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect") {
+            if (this.selectObject(e.clientX, e.clientY) != 0) //Select object in case we clicked on it (or on a connection)
+              this.setState({ movingObject: 1 });else this.setState({ selectedObject: 0 });
+          }
+        }
     }
     //Mouse is clicked up
 
   }, {
     key: 'handleMouseUp',
     value: function handleMouseUp(e) {
+
+      if (this.state.movingObject != 0) {
+        this.setState({ movingObject: 0 });
+      }
       //Stop drawing line if we'r drawing and make the connection line nice after validity check (it has to connect 2 objects)
       if (this.state.drawingline == 1) {
         this.setState({ drawingline: 0 });
-        if (this.isLastConnectionValid() == 1) this.correctLastConnection();else this.removeLastConnection();
+        if (this.isLastConnectionValid() == 1) this.correctLastConnection(); //Make it fit nicely to the objects
+        else this.removeLastConnection();
 
         //return
       }
@@ -199,8 +235,8 @@ var Editor = function (_React$Component) {
         //Click in editor means: add object, except when in play mode or on top of other object
         else {
             if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect") {
-              if (this.selectObject(e.clientX, e.clientY) == 0) //Select object in case we clicked on it (or on a connection)
-                this.addObject(e.clientX, e.clientY);
+              //if (this.selectObject(e.clientX,e.clientY) == 0) //Select object in case we clicked on it (or on a connection)
+              if (this.state.selectedObject == 0) this.addObject(e.clientX, e.clientY);
             }
           }
     }
