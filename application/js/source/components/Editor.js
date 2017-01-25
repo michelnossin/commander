@@ -329,6 +329,17 @@ class Editor extends React.Component {
         c.y2 = c.to.y
       }
     }
+    //if we get in the else clause it might mean the connection line does not connect the from and to objects anymore, due to moving an object
+    //Check if connection has from and to object set and reset it to the middle, calling the correction again
+    else {
+      if (c.from != 0 && c.to != 0) {
+        c.x1 = c.from.x
+        c.y1 = c.from.y
+        c.x2 = c.to.x
+        c.y2 = c.to.y
+        correctConnection(c)
+      }
+    }
     this.setState({connections : stateCopy.connections})
   }
   //If last connection is correct we need to correct it so its connecting at correct positions
@@ -357,7 +368,7 @@ class Editor extends React.Component {
   //Add connection between two objects
   addConnection (x,y) {
     this.deselectAll()
-    this.state.connections.push({ x1: x, y1:y, x2:x ,y2:y , styling: "1px solid black",corner: "right", selected: 0})
+    this.state.connections.push({ x1: x, y1:y, x2:x ,y2:y , styling: "1px solid black",corner: "right", selected: 0, from: 0 , to: 0})
     this.setState({ drawingline: 1})
     this.forceUpdate()
   }
