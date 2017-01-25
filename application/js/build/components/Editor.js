@@ -130,7 +130,12 @@ var Editor = function (_React$Component) {
       this.state.connections.map(function (obj, index) {
 
         if (obj["corner"] == "left") {
-          if (posX < obj.x1 + 5 && posX > obj.x1 - 5 && posY > obj.y1 && posY < obj.y2 || posX > obj.x1 && posX < obj.x2 && posY < obj.y2 + 5 && posY > obj.y2 - 5) {
+          var condition1 = posX > obj.x1 && posX < obj.x2 && posY < obj.y2 + 5 && posY > obj.y2 - 5 || posX > obj.x1 - 5 && posX < obj.x1 + 5 && posY > obj.y1 && posY < obj.y2;
+          var condition2 = posX > obj.x1 && posX < obj.x2 && posY < obj.y2 + 5 && posY > obj.y2 - 5 || posX > obj.x1 - 5 && posX < obj.x1 + 5 && posY > obj.y2 && posY < obj.y1;
+          var condition3 = posX > obj.x2 && posX < obj.x1 && posY < obj.y2 + 5 && posY > obj.y2 - 5 || posX > obj.x1 - 5 && posX < obj.x1 + 5 && posY > obj.y2 && posY < obj.y1;
+          var condition4 = posX > obj.x2 && posX < obj.x1 && posY < obj.y2 + 5 && posY > obj.y2 - 5 || posX > obj.x1 - 5 && posX < obj.x1 + 5 && posY > obj.y1 && posY < obj.y2;
+
+          if (obj.x1 < obj.x2 && obj.y1 < obj.y2 && condition1 || obj.x1 < obj.x2 && obj.y1 > obj.y2 && condition2 || obj.x2 < obj.x1 && obj.y2 < obj.y1 && condition3 || obj.x1 > obj.x2 && obj.y2 > obj.y1 && condition4) {
             //Yes found object, deselect al objects and select current object
             _this2.deselectAll();
             obj["selected"] = 1;
@@ -141,12 +146,12 @@ var Editor = function (_React$Component) {
         }
         //Right
         else {
-            var condition1 = posX > obj.x1 && posX < obj.x2 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y1 && posY < obj.y2;
-            var condition2 = posX > obj.x1 && posX < obj.x2 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y2 && posY < obj.y1;
-            var condition3 = posX > obj.x2 && posX < obj.x1 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y2 && posY < obj.y1;
-            var condition4 = posX > obj.x2 && posX < obj.x1 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y1 && posY < obj.y2;
+            var _condition = posX > obj.x1 && posX < obj.x2 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y1 && posY < obj.y2;
+            var _condition2 = posX > obj.x1 && posX < obj.x2 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y2 && posY < obj.y1;
+            var _condition3 = posX > obj.x2 && posX < obj.x1 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y2 && posY < obj.y1;
+            var _condition4 = posX > obj.x2 && posX < obj.x1 && posY < obj.y1 + 5 && posY > obj.y1 - 5 || posX > obj.x2 - 5 && posX < obj.x2 + 5 && posY > obj.y1 && posY < obj.y2;
 
-            if (obj.x1 < obj.x2 && obj.y1 < obj.y2 && condition1 || obj.x1 < obj.x2 && obj.y1 > obj.y2 && condition2 || obj.x2 < obj.x1 && obj.y2 < obj.y1 && condition3 || obj.x1 > obj.x2 && obj.y2 > obj.y1 && condition4) {
+            if (obj.x1 < obj.x2 && obj.y1 < obj.y2 && _condition || obj.x1 < obj.x2 && obj.y1 > obj.y2 && _condition2 || obj.x2 < obj.x1 && obj.y2 < obj.y1 && _condition3 || obj.x1 > obj.x2 && obj.y2 > obj.y1 && _condition4) {
               //Yes found object, deselect al objects and select current object
               _this2.deselectAll();
               obj["selected"] = 1;
@@ -464,7 +469,7 @@ var Editor = function (_React$Component) {
       //Get object style, which is the same except when selected
       var getObjectStyle = function getObjectStyle(obj) {
         var result = { position: "absolute", top: obj.y - 25 + 'px', left: obj.x - 25 + 'px', width: '50px', height: '50px' };
-        if (obj.selected == 1) result["outline"] = '6px dotted white';
+        if (obj.selected == 1) result["outline"] = '6px dotted orange';
 
         return result;
       };

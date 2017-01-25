@@ -92,12 +92,24 @@ class Editor extends React.Component {
      this.state.connections.map((obj,index) => {
 
        if (obj["corner"] == "left") {
-         if ((posX < obj.x1 + 5 && posX > obj.x1 - 5 && posY > obj.y1 && posY < obj.y2 ) ||
-         (posX > obj.x1 && posX < obj.x2 && posY < obj.y2 + 5 && posY > obj.y2 - 5)) {
+         let condition1 = ((posX > obj.x1 && posX < obj.x2 && posY < obj.y2 + 5 && posY > obj.y2 - 5) ||
+                      (posX > obj.x1 -5 && posX < obj.x1 + 5 && posY > obj.y1 && posY < obj.y2))
+         let condition2 = ((posX > obj.x1 && posX < obj.x2 && posY < obj.y2 + 5 && posY > obj.y2 - 5) ||
+                     (posX > obj.x1 -5 && posX < obj.x1 + 5 && posY > obj.y2 && posY < obj.y1))
+         let condition3 = ((posX > obj.x2 && posX < obj.x1 && posY < obj.y2 + 5 && posY > obj.y2 - 5) ||
+                      (posX > obj.x1 -5 && posX < obj.x1 + 5 && posY > obj.y2 && posY < obj.y1))
+         let condition4 = ((posX > obj.x2 && posX < obj.x1 && posY < obj.y2 + 5 && posY > obj.y2 - 5) ||
+                     (posX > obj.x1 -5 && posX < obj.x1 + 5 && posY > obj.y1 && posY < obj.y2))
+
+
+            if ((obj.x1 < obj.x2 && obj.y1 < obj.y2 && condition1) ||
+             (obj.x1 < obj.x2 && obj.y1 > obj.y2 && condition2) ||
+              (obj.x2 < obj.x1 && obj.y2 < obj.y1 && condition3) ||
+            (obj.x1 > obj.x2 && obj.y2 > obj.y1 && condition4)) {
              //Yes found object, deselect al objects and select current object
              this.deselectAll()
              obj["selected"] = 1
-             obj["corner"] = "right" //switch corner connection if clicked
+             obj["corner"] = "right"  //switch corner connection if clicked
              isObjectFound = 1
              this.correctConnection(obj) //Beautify it again
            }
@@ -429,7 +441,7 @@ class Editor extends React.Component {
     var getObjectStyle = function(obj) {
       var result = {position: "absolute", top: (obj.y-25) + 'px', left: (obj.x-25) + 'px', width: '50px' , height : '50px'}
       if (obj.selected == 1)
-        result["outline"] = '6px dotted white'
+        result["outline"] = '6px dotted orange'
 
       return result
     }
