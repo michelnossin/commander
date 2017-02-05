@@ -568,12 +568,18 @@ var Editor = function (_React$Component) {
       //Users wants to draw a connect Line,
       if (this.state.mode == "connect" && e.target.id == "") {
         this.addConnection(e.clientX, e.clientY);
+        e.preventDefault();
+        return true; //prevent dragging of image
       }
       //Click in editor means: add object, except when in play mode or on top of other object
       else {
           if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect") {
-            if (this.selectObject(e.clientX, e.clientY) != 0) //Select object in case we clicked on it (or on a connection)
-              this.setState({ movingObject: 1 });else this.setState({ selectedObject: 0 });
+            if (this.selectObject(e.clientX, e.clientY) != 0) {
+              //Select object in case we clicked on it (or on a connection)
+              this.setState({ movingObject: 1 });
+              e.preventDefault();
+              return true; //prevent dragging of image
+            } else this.setState({ selectedObject: 0 });
           }
         }
     }
@@ -1056,7 +1062,7 @@ var Editor = function (_React$Component) {
           return _react2.default.createElement(
             'div',
             { key: "obj_" + index },
-            _react2.default.createElement('img', { onDragStart: false, className: 'Editor', key: "obj_" + index,
+            _react2.default.createElement('img', { draggable: false, onDragStart: false, className: 'Editor', key: "obj_" + index,
               style: getObjectStyle(obj),
               src: imageSrc(obj.objType) }),
             _react2.default.createElement(

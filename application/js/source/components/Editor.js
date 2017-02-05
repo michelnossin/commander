@@ -230,12 +230,18 @@ class Editor extends React.Component {
     //Users wants to draw a connect Line,
     if (this.state.mode == "connect" && e.target.id == "") {
       this.addConnection(e.clientX,e.clientY)
+      e.preventDefault();
+      return true //prevent dragging of image
     }
     //Click in editor means: add object, except when in play mode or on top of other object
     else {
       if (this.state.mode != "play" && this.state.mode != "" && this.state.mode != "connect") {
-        if (this.selectObject(e.clientX,e.clientY) != 0) //Select object in case we clicked on it (or on a connection)
+        if (this.selectObject(e.clientX,e.clientY) != 0) {
+          //Select object in case we clicked on it (or on a connection)
           this.setState({ movingObject : 1})
+          e.preventDefault();
+          return true //prevent dragging of image
+        }
         else
           this.setState({ selectedObject : 0})
 
@@ -714,7 +720,7 @@ class Editor extends React.Component {
       {
         this.state.objects.map((obj,index) => (
           <div key={"obj_" + index}>
-          <img onDragStart={false} className="Editor" key={"obj_" + index}
+          <img draggable={false} onDragStart={false} className="Editor" key={"obj_" + index}
                            style={getObjectStyle(obj)}
                            src={imageSrc(obj.objType)} />
           <h4 style={{position: "absolute", top: (obj.y + 25) + 'px', left: (obj.x - (textWidthPixels(obj.name) / 2)) + 'px'}}>
