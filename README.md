@@ -36,6 +36,7 @@ npm install --save-dev babel-preset-stage-0
 npm install --save babel-plugin-transform-decorators-legacy
 npm install react-simple-toolbar --save
 npm install --save-dev babel-preset-es2015-ie
+npm install --save-dev rodal (and reactify??)
 
 
 ```

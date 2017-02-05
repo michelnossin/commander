@@ -130,6 +130,7 @@ var MyBar = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
+
       return _react2.default.createElement(
         'div',
         { onClick: this.clickBtn, className: 'Toolbar' },

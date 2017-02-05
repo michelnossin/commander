@@ -26,6 +26,10 @@ var _socket = require('socket.io-client');
 
 var _socket2 = _interopRequireDefault(_socket);
 
+var _ContextDialog = require('./ContextDialog');
+
+var _ContextDialog2 = _interopRequireDefault(_ContextDialog);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -33,6 +37,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+//import Rodal from 'rodal';
+//import Modal from 'boron/DropModal';
+//import InlineEdit from 'react-edit-inline';
+//import 'rodal/lib/rodal.css';
 
 var socket = (0, _socket2.default)('http://localhost'); //our server 192.168.0.105
 var bgColors = { "Default": "#81b71a",
@@ -66,6 +75,7 @@ var Editor = function (_React$Component) {
       connections: [], //list of all connections (lines) between the objects
       drawingline: 0, //set to 1 while use is drawing a line, used by mousemove event
       selectedObject: 0, //Set object reference last selected (also connections), or 0 if non
+      contextMenu: false, //set to true if user clicked right mouse button on a object
       movingObject: 0 //set to 1 if we are moving an object (non connection)
     };
 
@@ -73,7 +83,8 @@ var Editor = function (_React$Component) {
     _this.addObject = _this.addObject.bind(_this); //Add object like source or sink in editor
     _this.addConnection = _this.addConnection.bind(_this); //Add connection/line between two objects
     _this.handleMouseUp = _this.handleMouseUp.bind(_this); //mouse up event handler, used to add objects
-    _this.handleMouseDown = _this.handleMouseDown.bind(_this); //mouse down event used to add connection (so moving mouse will make it larger)
+    _this.handleLeftMouseDown = _this.handleLeftMouseDown.bind(_this); //mouse down event used to add connection (so moving mouse will make it larger)
+    _this.handleRightMouseDown = _this.handleRightMouseDown.bind(_this); //mouse down event used to add connection (so moving mouse will make it larger)
     _this.handleMouseMove = _this.handleMouseMove.bind(_this); //Used to draw connections
     _this.handleKeyDown = _this.handleKeyDown.bind(_this); //keydown, eg to delete objects
     _this.isLastConnectionValid = _this.isLastConnectionValid.bind(_this); //Is connection between two objects and thus valid
@@ -83,6 +94,9 @@ var Editor = function (_React$Component) {
     _this.selectObject = _this.selectObject.bind(_this); //Select object at given position, if any
     _this.deselectAll = _this.deselectAll.bind(_this); //deselect all objects and connections
     _this.deleteSelectedObject = _this.deleteSelectedObject.bind(_this); //delete selected object/connections or connection (after delete key press)
+    _this.closeMenuWin = _this.closeMenuWin.bind(_this);
+    //this.handleContextChange = this.handleContextChange.bind(this) //Handles changes in the contextMenu
+    _this.clickBtn = _this.clickBtn.bind(_this);
 
     //receive event from server
     socket.on('serverevent', function (ev_msg) {
@@ -202,11 +216,46 @@ var Editor = function (_React$Component) {
       return isObjectFound;
     }
 
-    //Mouse is clicked down
+    //Mouse is clicked down using right button (so show context menu)
 
   }, {
-    key: 'handleMouseDown',
-    value: function handleMouseDown(e) {
+    key: 'handleRightMouseDown',
+    value: function handleRightMouseDown(e) {
+      if (this.state.contextMenu == true) return;
+
+      console.log("Client used right mouse ");
+      if (this.selectObject(e.clientX, e.clientY) != 0) {
+        //Select object in case we clicked on it (or on a connection)
+
+        e.preventDefault();
+        //this.setState({ selectedObject : 1})
+        /*
+        window.removeEventListener('mouseup', this.handleMouseUp, false); //click
+        window.removeEventListener('mousedown', this.handleLeftMouseDown, false);
+        window.removeEventListener('contextmenu', this.handleRightMouseDown, false);
+        window.removeEventListener('mousemove', this.handleMouseMove, false);
+        window.removeEventListener('keydown', this.handleKeyDown, false);
+        */
+        this.setState({ contextMenu: true }); //This will make Render show some nice dialog
+        //this.forceUpdate()
+
+        //this.refs.modal.show();
+        return true; //Prevent context menu browser popup
+      }
+    }
+
+    //Mouse is clicked down using left key
+
+  }, {
+    key: 'handleLeftMouseDown',
+    value: function handleLeftMouseDown(e) {
+      console.log("Client used left mouse ");
+      if (this.state.contextMenu == true) {
+        console.log("in context mode ");
+
+        return;
+      }
+
       //Users wants to draw a connect Line,
       if (this.state.mode == "connect" && e.target.id == "") {
         this.addConnection(e.clientX, e.clientY);
@@ -224,6 +273,13 @@ var Editor = function (_React$Component) {
   }, {
     key: 'handleMouseUp',
     value: function handleMouseUp(e) {
+      //console.log("Client used mouse up "  );
+
+      if (this.state.contextMenu == true) {
+        //if (e.target.id == "contextclose")
+        //  this.closeMenuWin(e)
+        return;
+      }
 
       if (this.state.movingObject != 0) {
         this.setState({ movingObject: 0 });
@@ -258,7 +314,8 @@ var Editor = function (_React$Component) {
   }, {
     key: 'handleKeyDown',
     value: function handleKeyDown(event) {
-      console.log("Key press");
+      //if (this.state.contextMenu == true) return
+      //console.log("Key press")
 
       if (event) {
         //Delete key
@@ -271,10 +328,14 @@ var Editor = function (_React$Component) {
     key: 'componentWillMount',
     value: function componentWillMount() {
       var self = this;
-      document.addEventListener('mouseup', self.handleMouseUp, false); //click
-      document.addEventListener('mousedown', self.handleMouseDown, false);
-      document.addEventListener('mousemove', self.handleMouseMove, false);
-      document.addEventListener('keydown', self.handleKeyDown, false);
+      console.log("mounting event handlers");
+
+      window.addEventListener('mouseup', self.handleMouseUp, false); //click
+      window.addEventListener('mousedown', self.handleLeftMouseDown, false);
+      window.addEventListener('mousemove', self.handleMouseMove, false);
+      window.addEventListener('keydown', self.handleKeyDown, false);
+      window.addEventListener('contextmenu', self.handleRightMouseDown, false);
+      //window.addEventListener('click', self.clickBtn, false);
     }
   }, {
     key: 'deleteSelectedObject',
@@ -519,10 +580,11 @@ var Editor = function (_React$Component) {
     value: function componentWillUnmount() {
       console.log("Client with was disconnected ");
       window.removeEventListener("resize", this.updateDimensions);
-      document.removeEventListener('mouseup', this.handleMouseUp, false); //click
-      document.removeEventListener('mousedown', this.handleMouseUp, false);
-      document.removeEventListener('mousemove', this.handleMouseMove, false);
-      document.removeEventListener('keydown', this.handleKeyDown, false);
+      window.removeEventListener('mouseup', this.handleMouseUp, false); //click
+      window.removeEventListener('mousedown', this.handleLeftMouseDown, false);
+      window.removeEventListener('contextmenu', this.handleRightMouseDown, false);
+      window.removeEventListener('mousemove', this.handleMouseMove, false);
+      window.removeEventListener('keydown', this.handleKeyDown, false);
     }
 
     //Send event message to server, for example to let others know we change our line direction
@@ -531,6 +593,32 @@ var Editor = function (_React$Component) {
     key: 'sendMessage',
     value: function sendMessage(message) {
       socket.emit('clientmessage', message);
+    }
+
+    //Close context menu
+
+  }, {
+    key: 'closeMenuWin',
+    value: function closeMenuWin(e) {
+      console.log("closing context");
+      this.setState({ contextMenu: false });
+      //this.refs.modal.hide();
+    }
+
+    /*
+      //handle changes within context menu
+      handleContextChange(e) {
+        var stateCopy = Object.assign({}, this.state);
+        var so = stateCopy.selectedObject
+        so.name = e.target.value
+        this.setState(stateCopy);
+      }
+    */
+
+  }, {
+    key: 'clickBtn',
+    value: function clickBtn(e) {
+      console.log("editor click event");
     }
   }, {
     key: 'render',
@@ -630,9 +718,28 @@ var Editor = function (_React$Component) {
         }
       };
 
+      //Get dialog if user press right button
+      var getContextMenu = function getContextMenu(self) {
+
+        var contextMenu;
+        if (self.state.contextMenu == true) {
+          contextMenu = _react2.default.createElement(
+            'div',
+            { id: 'someid' },
+            _react2.default.createElement(_ContextDialog2.default, { key: 'contextmenu',
+              onClick: self.closeMenuWin,
+              selectedObject: self.state.selectedObject,
+              visible: true })
+          );
+        }
+        return contextMenu;
+      };
+
+      var self = this;
+
       return _react2.default.createElement(
         'div',
-        { className: 'Editor', id: 'editor' },
+        { onClick: this.clickBtn, className: 'Editor', id: 'editor' },
         this.state.connections.map(function (obj, index) {
           return getConnection(obj, index);
         }),
@@ -640,7 +747,7 @@ var Editor = function (_React$Component) {
           return _react2.default.createElement(
             'div',
             { key: "obj_" + index },
-            _react2.default.createElement('img', { ondragstart: 'return false;', className: 'Editor', key: "obj_" + index,
+            _react2.default.createElement('img', { onDragStart: false, className: 'Editor', key: "obj_" + index,
               style: getObjectStyle(obj),
               src: imageSrc(obj.objType) }),
             _react2.default.createElement(
@@ -653,7 +760,8 @@ var Editor = function (_React$Component) {
               )
             )
           );
-        })
+        }),
+        getContextMenu(self)
       );
     }
   }]);

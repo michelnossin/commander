@@ -3,6 +3,12 @@ import keydown from 'react-keydown';
 import ReactDOM from 'react-dom';
 import Line from './Line';
 import io from 'socket.io-client'
+import ContextDialog from './ContextDialog'
+
+//import Rodal from 'rodal';
+//import Modal from 'boron/DropModal';
+//import InlineEdit from 'react-edit-inline';
+//import 'rodal/lib/rodal.css';
 
 let socket = io(`http://localhost`) //our server 192.168.0.105
 var bgColors = { "Default": "#81b71a",
@@ -32,6 +38,7 @@ class Editor extends React.Component {
         connections : [], //list of all connections (lines) between the objects
         drawingline: 0,  //set to 1 while use is drawing a line, used by mousemove event
         selectedObject: 0,  //Set object reference last selected (also connections), or 0 if non
+        contextMenu: false, //set to true if user clicked right mouse button on a object
         movingObject: 0   //set to 1 if we are moving an object (non connection)
     };
 
@@ -39,7 +46,8 @@ class Editor extends React.Component {
     this.addObject = this.addObject.bind(this) //Add object like source or sink in editor
     this.addConnection = this.addConnection.bind(this)  //Add connection/line between two objects
     this.handleMouseUp = this.handleMouseUp.bind(this)  //mouse up event handler, used to add objects
-    this.handleMouseDown = this.handleMouseDown.bind(this)  //mouse down event used to add connection (so moving mouse will make it larger)
+    this.handleLeftMouseDown = this.handleLeftMouseDown.bind(this)  //mouse down event used to add connection (so moving mouse will make it larger)
+    this.handleRightMouseDown = this.handleRightMouseDown.bind(this)  //mouse down event used to add connection (so moving mouse will make it larger)
     this.handleMouseMove = this.handleMouseMove.bind(this)  //Used to draw connections
     this.handleKeyDown = this.handleKeyDown.bind(this)  //keydown, eg to delete objects
     this.isLastConnectionValid = this.isLastConnectionValid.bind(this) //Is connection between two objects and thus valid
@@ -49,6 +57,9 @@ class Editor extends React.Component {
     this.selectObject = this.selectObject.bind(this) //Select object at given position, if any
     this.deselectAll = this.deselectAll.bind(this) //deselect all objects and connections
     this.deleteSelectedObject = this.deleteSelectedObject.bind(this) //delete selected object/connections or connection (after delete key press)
+    this.closeMenuWin = this.closeMenuWin.bind(this)
+    //this.handleContextChange = this.handleContextChange.bind(this) //Handles changes in the contextMenu
+    this.clickBtn = this.clickBtn.bind(this)
 
     //receive event from server
     socket.on('serverevent', ev_msg => {
@@ -178,8 +189,44 @@ class Editor extends React.Component {
 
   }
 
-  //Mouse is clicked down
-  handleMouseDown  (e) {
+  //Mouse is clicked down using right button (so show context menu)
+  handleRightMouseDown  (e) {
+    if (this.state.contextMenu == true) return
+
+    console.log("Client used right mouse "  );
+    if (this.selectObject(e.clientX,e.clientY) != 0) {//Select object in case we clicked on it (or on a connection)
+
+      e.preventDefault();
+      //this.setState({ selectedObject : 1})
+      /*
+      window.removeEventListener('mouseup', this.handleMouseUp, false); //click
+      window.removeEventListener('mousedown', this.handleLeftMouseDown, false);
+      window.removeEventListener('contextmenu', this.handleRightMouseDown, false);
+      window.removeEventListener('mousemove', this.handleMouseMove, false);
+      window.removeEventListener('keydown', this.handleKeyDown, false);
+*/
+      this.setState({ contextMenu : true}) //This will make Render show some nice dialog
+      //this.forceUpdate()
+
+      //this.refs.modal.show();
+      return true //Prevent context menu browser popup
+
+    }
+
+
+  }
+
+
+
+  //Mouse is clicked down using left key
+  handleLeftMouseDown  (e) {
+    console.log("Client used left mouse "  );
+    if (this.state.contextMenu == true) {
+      console.log("in context mode "  );
+
+      return
+    }
+
     //Users wants to draw a connect Line,
     if (this.state.mode == "connect" && e.target.id == "") {
       this.addConnection(e.clientX,e.clientY)
@@ -199,6 +246,13 @@ class Editor extends React.Component {
   }
   //Mouse is clicked up
   handleMouseUp  (e) {
+    //console.log("Client used mouse up "  );
+
+    if (this.state.contextMenu == true) {
+      //if (e.target.id == "contextclose")
+      //  this.closeMenuWin(e)
+      return
+    }
 
     if (this.state.movingObject != 0) {
       this.setState({ movingObject : 0})
@@ -239,7 +293,8 @@ class Editor extends React.Component {
 
   //keypress reveived
     handleKeyDown(event) {
-      console.log("Key press")
+      //if (this.state.contextMenu == true) return
+      //console.log("Key press")
 
       if ( event ) {
         //Delete key
@@ -252,10 +307,15 @@ class Editor extends React.Component {
 
   componentWillMount  () {
       let self = this
-      document.addEventListener('mouseup', self.handleMouseUp, false); //click
-      document.addEventListener('mousedown', self.handleMouseDown, false);
-      document.addEventListener('mousemove', self.handleMouseMove, false);
-      document.addEventListener('keydown', self.handleKeyDown, false);
+      console.log("mounting event handlers")
+
+      window.addEventListener('mouseup', self.handleMouseUp, false); //click
+      window.addEventListener('mousedown', self.handleLeftMouseDown, false);
+      window.addEventListener('mousemove', self.handleMouseMove, false);
+      window.addEventListener('keydown', self.handleKeyDown, false);
+      window.addEventListener('contextmenu', self.handleRightMouseDown, false);
+      //window.addEventListener('click', self.clickBtn, false);
+
     }
 
   deleteSelectedObject() {
@@ -484,16 +544,39 @@ class Editor extends React.Component {
   componentWillUnmount() {
     console.log("Client with was disconnected "  );
     window.removeEventListener("resize", this.updateDimensions);
-    document.removeEventListener('mouseup', this.handleMouseUp, false); //click
-    document.removeEventListener('mousedown', this.handleMouseUp, false);
-    document.removeEventListener('mousemove', this.handleMouseMove, false);
-    document.removeEventListener('keydown', this.handleKeyDown, false);
+    window.removeEventListener('mouseup', this.handleMouseUp, false); //click
+    window.removeEventListener('mousedown', this.handleLeftMouseDown, false);
+    window.removeEventListener('contextmenu', this.handleRightMouseDown, false);
+    window.removeEventListener('mousemove', this.handleMouseMove, false);
+    window.removeEventListener('keydown', this.handleKeyDown, false);
 
   }
 
   //Send event message to server, for example to let others know we change our line direction
   sendMessage(message) {
     socket.emit('clientmessage', message)
+  }
+
+  //Close context menu
+  closeMenuWin(e) {
+      console.log("closing context")
+      this.setState({ contextMenu: false });
+      //this.refs.modal.hide();
+
+    }
+
+/*
+  //handle changes within context menu
+  handleContextChange(e) {
+    var stateCopy = Object.assign({}, this.state);
+    var so = stateCopy.selectedObject
+    so.name = e.target.value
+    this.setState(stateCopy);
+  }
+*/
+
+  clickBtn(e) {
+    console.log("editor click event")
   }
 
   render() {
@@ -603,25 +686,44 @@ class Editor extends React.Component {
            </div>
          )
         }
-
-
     }
 
+    //Get dialog if user press right button
+    var getContextMenu = function(self) {
+
+      var contextMenu
+      if (self.state.contextMenu == true) {
+        contextMenu = <div id="someid" >
+                           <ContextDialog key="contextmenu"
+                                      onClick={self.closeMenuWin}
+                                      selectedObject={self.state.selectedObject}
+                                      visible={true} />
+                      </div>
+      }
+      return contextMenu
+    }
+
+
+    let self=this
+
     return (
-      <div className="Editor" id="editor" >
+      <div onClick={this.clickBtn} className="Editor" id="editor" >
       {
         this.state.connections.map((obj,index) => getConnection(obj,index))
       }
       {
         this.state.objects.map((obj,index) => (
           <div key={"obj_" + index}>
-          <img ondragstart="return false;" className="Editor" key={"obj_" + index}
+          <img onDragStart={false} className="Editor" key={"obj_" + index}
                            style={getObjectStyle(obj)}
                            src={imageSrc(obj.objType)} />
           <h4 style={{position: "absolute", top: (obj.y + 25) + 'px', left: (obj.x - (textWidthPixels(obj.name) / 2)) + 'px'}}>
               <span style={{color: bgColors.Black, backgroundColor: bgColors.White}}>{obj.name}</span></h4>
           </div>
         ))
+      }
+      {
+          getContextMenu(self)
       }
       </div>
     );

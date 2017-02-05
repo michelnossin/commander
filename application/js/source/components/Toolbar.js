@@ -72,6 +72,7 @@ class MyBar extends React.Component {
     return <span style={{color: bgColors.Blue, backgroundColor: bgColors.White}}>Data Admiral</span>
   }
   render() {
+    
     return (
       <div onClick={this.clickBtn} className="Toolbar" >
         <Toolbar >
