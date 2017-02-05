@@ -57,9 +57,9 @@ class Editor extends React.Component {
     this.selectObject = this.selectObject.bind(this) //Select object at given position, if any
     this.deselectAll = this.deselectAll.bind(this) //deselect all objects and connections
     this.deleteSelectedObject = this.deleteSelectedObject.bind(this) //delete selected object/connections or connection (after delete key press)
-    this.closeMenuWin = this.closeMenuWin.bind(this)
-    //this.handleContextChange = this.handleContextChange.bind(this) //Handles changes in the contextMenu
-    this.clickBtn = this.clickBtn.bind(this)
+    this.closeMenuWin = this.closeMenuWin.bind(this) //close context dialog (properties for objects)
+    this.clickBtn = this.clickBtn.bind(this) //global click handler for editor (not used)
+    this.onChangeSelectedObject = this.onChangeSelectedObject.bind(this)  //Change within context dialog call this function (eg change obj name on the spot)
 
     //receive event from server
     socket.on('serverevent', ev_msg => {
@@ -581,8 +581,19 @@ class Editor extends React.Component {
   }
 */
 
+  //click with editor received.
   clickBtn(e) {
     console.log("editor click event")
+  }
+
+  //Change event (obj name changed within context dialog)
+  onChangeSelectedObject(selectedObject) {
+    console.log("Changed object")
+    var stateCopy = Object.assign({}, this.state);
+    stateCopy.selectedObject = selectedObject
+    this.setState(stateCopy);
+
+
   }
 
   render() {
@@ -702,6 +713,7 @@ class Editor extends React.Component {
         contextMenu = <div id="someid" >
                            <ContextDialog key="contextmenu"
                                       onClick={self.closeMenuWin}
+                                      onChange={self.onChangeSelectedObject}
                                       selectedObject={self.state.selectedObject}
                                       visible={true} />
                       </div>

@@ -46,10 +46,19 @@ var ContextDialog = function (_React$Component) {
             this.props.onClick();
         }
     }, {
-        key: 'handleClick',
-        value: function handleClick(e) {
-            console.log('this is:', e.target.id);
+        key: 'onHandleChange',
+        value: function onHandleChange(e) {
+            var stateCopy = Object.assign({}, this.state);
+
+            stateCopy.selectedObject.name = e.target.value;
+            this.setState(stateCopy);
+
+            this.props.onChange(this.state.selectedObject);
         }
+        //    handleClick(e) {
+        //        console.log('this is:', e.target.id);
+        //      }
+
     }, {
         key: 'render',
         value: function render() {
@@ -57,8 +66,10 @@ var ContextDialog = function (_React$Component) {
             var myBtn = _react2.default.createElement(
                 'button',
                 { id: 'closebtn', onClick: this.props.onClick },
-                'Close and save'
+                'Close Dialog'
             );
+            var objName = _react2.default.createElement('input', { id: 'objname', type: 'text', value: this.state.selectedObject.name,
+                onChange: this.onHandleChange.bind(this) });
 
             var self = this;
             return _react2.default.createElement(
@@ -73,7 +84,7 @@ var ContextDialog = function (_React$Component) {
                         'div',
                         null,
                         'Name: ',
-                        this.state.selectedObject.name,
+                        objName,
                         ' ',
                         myBtn
                     )

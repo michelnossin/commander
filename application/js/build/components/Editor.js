@@ -94,9 +94,9 @@ var Editor = function (_React$Component) {
     _this.selectObject = _this.selectObject.bind(_this); //Select object at given position, if any
     _this.deselectAll = _this.deselectAll.bind(_this); //deselect all objects and connections
     _this.deleteSelectedObject = _this.deleteSelectedObject.bind(_this); //delete selected object/connections or connection (after delete key press)
-    _this.closeMenuWin = _this.closeMenuWin.bind(_this);
-    //this.handleContextChange = this.handleContextChange.bind(this) //Handles changes in the contextMenu
-    _this.clickBtn = _this.clickBtn.bind(_this);
+    _this.closeMenuWin = _this.closeMenuWin.bind(_this); //close context dialog (properties for objects)
+    _this.clickBtn = _this.clickBtn.bind(_this); //global click handler for editor (not used)
+    _this.onChangeSelectedObject = _this.onChangeSelectedObject.bind(_this); //Change within context dialog call this function (eg change obj name on the spot)
 
     //receive event from server
     socket.on('serverevent', function (ev_msg) {
@@ -621,10 +621,23 @@ var Editor = function (_React$Component) {
       }
     */
 
+    //click with editor received.
+
   }, {
     key: 'clickBtn',
     value: function clickBtn(e) {
       console.log("editor click event");
+    }
+
+    //Change event (obj name changed within context dialog)
+
+  }, {
+    key: 'onChangeSelectedObject',
+    value: function onChangeSelectedObject(selectedObject) {
+      console.log("Changed object");
+      var stateCopy = Object.assign({}, this.state);
+      stateCopy.selectedObject = selectedObject;
+      this.setState(stateCopy);
     }
   }, {
     key: 'render',
@@ -734,6 +747,7 @@ var Editor = function (_React$Component) {
             { id: 'someid' },
             _react2.default.createElement(_ContextDialog2.default, { key: 'contextmenu',
               onClick: self.closeMenuWin,
+              onChange: self.onChangeSelectedObject,
               selectedObject: self.state.selectedObject,
               visible: true })
           );
