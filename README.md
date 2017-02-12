@@ -59,6 +59,10 @@ npm install --save http
 npm install --save html
 npm install --save jade
 
+npm install kafka-node --no-optional --save --python=C:\Python27\python.exe   (in case your python default is > 3.0, change to your location )
+OR npm install kafka-node --no-optional --save
+
+
 ```
 
 ## Build the React frontend
