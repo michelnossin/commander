@@ -14,6 +14,10 @@ var _rodal = require('rodal');
 
 var _rodal2 = _interopRequireDefault(_rodal);
 
+var _reactList = require('react-list');
+
+var _reactList2 = _interopRequireDefault(_reactList);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -30,7 +34,27 @@ var ContextDialog = function (_React$Component) {
 
         var _this = _possibleConstructorReturn(this, (ContextDialog.__proto__ || Object.getPrototypeOf(ContextDialog)).call(this, props));
 
-        _this.state = { visible: props.visible, selectedObject: props.selectedObject };
+        _this.renderItem = _this.renderItem.bind(_this);
+
+        _this.state = { visible: props.visible, selectedObject: props.selectedObject,
+            messages: [] };
+
+        //receive event from server
+        _this.props.socket.on('serverevent', function (ev_msg) {
+            if (ev_msg.type == 'kafkamessage') {
+                console.log("topic message via kafkia was received");
+                console.log(ev_msg.message.value);
+                var stateCopy = Object.assign({}, _this.state);
+                var messages = stateCopy.messages.push(ev_msg.message.value);
+                //console.log("messages FOR: " + messages)
+                //if (messages.length > 15)
+                //stateCopy.messages = stateCopy.messages.slice(-15)
+                //console.log("messages after: " + stateCopy.messages)
+                _this.setState(stateCopy);
+                _this.list.scrollTo(30);
+            }
+        });
+
         return _this;
     }
 
@@ -42,6 +66,7 @@ var ContextDialog = function (_React$Component) {
     }, {
         key: 'hide',
         value: function hide() {
+            this.list = null;
             this.setState({ visible: false });
             this.props.onClick();
         }
@@ -60,8 +85,24 @@ var ContextDialog = function (_React$Component) {
         //      }
 
     }, {
+        key: 'renderItem',
+        value: function renderItem(index, key) {
+            //console.log("index : " + index)
+            var self = this;
+            //index = self.state.messages.length - 50 + index + (50 - self.state.messages.length)
+            //key = index
+            //console.log("rendering to: " + index)
+            return _react2.default.createElement(
+                'div',
+                { key: key },
+                self.state.messages[index]
+            );
+        }
+    }, {
         key: 'render',
         value: function render() {
+
+            var self = this;
 
             var myBtn = _react2.default.createElement(
                 'button',
@@ -70,8 +111,14 @@ var ContextDialog = function (_React$Component) {
             );
             var objName = _react2.default.createElement('input', { id: 'objname', type: 'text', value: this.state.selectedObject.name,
                 onChange: this.onHandleChange.bind(this) });
+            var eventList = _react2.default.createElement(_reactList2.default, { itemRenderer: self.renderItem, length: 30, type: 'uniform', ref: function ref(c) {
+                    return self.list = c;
+                } });
 
-            var self = this;
+            //var myChild = React.renderComponent(eventList);
+            //eventList.scrollTo(self.state.messages.length)
+            //eventList.scrollTo(self.state.messages.length)
+
             return _react2.default.createElement(
                 'div',
                 null,
@@ -86,14 +133,37 @@ var ContextDialog = function (_React$Component) {
                         'Name: ',
                         objName,
                         ' ',
-                        myBtn
+                        myBtn,
+                        _react2.default.createElement(
+                            'div',
+                            { style: { height: 200, overflow: 'scroll' } },
+                            eventList
+                        )
                     )
                 )
             );
         }
+
+        //ref={(child) => { child.scrollTo(self.state.messages.length); }}
+
     }]);
 
     return ContextDialog;
 }(_react2.default.Component);
+
+/*
+<div style={{overflow: 'auto', maxHeight: 400}}>
+          <ReactList
+            itemRenderer={::this.renderItem}
+            length={this.state.accounts.length}
+            type='uniform'
+          />
+        </div>
+
+        {
+        this.state.messages.map((msg,index) => (
+          <div>{msg}</div>
+        ))}
+*/
 
 exports.default = ContextDialog;

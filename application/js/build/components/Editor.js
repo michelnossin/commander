@@ -97,6 +97,7 @@ var Editor = function (_React$Component) {
     _this.closeMenuWin = _this.closeMenuWin.bind(_this); //close context dialog (properties for objects)
     _this.clickBtn = _this.clickBtn.bind(_this); //global click handler for editor (not used)
     _this.onChangeSelectedObject = _this.onChangeSelectedObject.bind(_this); //Change within context dialog call this function (eg change obj name on the spot)
+    //this.onServerEvent = this.onServerEvent.bind(this) //Event from server, most likeyly socket event for a kafka message
 
     //receive event from server
     socket.on('serverevent', function (ev_msg) {
@@ -110,16 +111,9 @@ var Editor = function (_React$Component) {
           console.log("Server handshake received by client");
         }
     });
+
     return _this;
   }
-
-  /*
-    @keydown( 'enter' ) // or specify `which` code directly, in this case 13
-      submit( event ) {
-        // do something, or not, with the keydown event, maybe event.preventDefault()
-        console.log("YES")
-      }
-  */
 
   //Mouse is moved
 
@@ -236,10 +230,9 @@ var Editor = function (_React$Component) {
         window.removeEventListener('mousemove', this.handleMouseMove, false);
         window.removeEventListener('keydown', this.handleKeyDown, false);
         */
+        //window.removeEventListener('keydown', this.handleKeyDown, false); //Temporaray disable keypress so delete button in dialog can be used
         this.setState({ contextMenu: true }); //This will make Render show some nice dialog
-        //this.forceUpdate()
 
-        //this.refs.modal.show();
         return true; //Prevent context menu browser popup
       }
     }
@@ -274,6 +267,7 @@ var Editor = function (_React$Component) {
           }
         }
     }
+
     //Mouse is clicked up
 
   }, {
@@ -282,8 +276,6 @@ var Editor = function (_React$Component) {
       //console.log("Client used mouse up "  );
 
       if (this.state.contextMenu == true) {
-        //if (e.target.id == "contextclose")
-        //  this.closeMenuWin(e)
         return;
       }
 
@@ -295,8 +287,6 @@ var Editor = function (_React$Component) {
         this.setState({ drawingline: 0 });
         if (this.isLastConnectionValid() == 1) this.correctLastConnection(); //Make it fit nicely to the objects
         else this.removeLastConnection();
-
-        //return
       }
       //Toolbar click ignore
       if (e.target.id == "toolbar") return;
@@ -320,8 +310,6 @@ var Editor = function (_React$Component) {
   }, {
     key: 'handleKeyDown',
     value: function handleKeyDown(event) {
-      //if (this.state.contextMenu == true) return
-      //console.log("Key press")
 
       if (event) {
         //Delete key
@@ -375,10 +363,8 @@ var Editor = function (_React$Component) {
 
         this.setState(stateCopy);
       }
-
-      //this.state.objects.map((obj,index) => {})
-      //this.state.connections.map((obj,index) => {})
     }
+
     //Is last connection between two objects valid? 0 = No , 1 = Yes
 
   }, {
@@ -422,8 +408,7 @@ var Editor = function (_React$Component) {
   }, {
     key: 'correctConnection',
     value: function correctConnection(c) {
-      //var stateCopy = Object.assign({}, this.state);
-      //var lastLine = stateCopy.connections[stateCopy.connections.length-1]
+
       if (c.x2 > c.x1 && c.y2 > c.y1) {
         if (c.corner == "left") {
           c.x1 = c.from.x;
@@ -538,30 +523,6 @@ var Editor = function (_React$Component) {
       this.forceUpdate();
     }
 
-    //shouldComponentUpdate(nextProps, nextState) {
-    //  return false;
-    //}
-
-    //Call when windows resized.
-    /*
-    updateDimensions() {
-          let orgWidth = this.state.width
-          let orgHeight = this.state.height
-          console.log("Width and Height resize to " + String(window.innerWidth) + " and " + String(window.innerHeight)  );
-          let newWidth = window.innerWidth
-          let newHeight = window.innerHeight
-          //this.setState( { width :window.innerWidth, height: window.innerHeight })
-            var positions = Object.assign({},this.state.position)
-            Object.keys(positions).map((player,index) => {
-            positions[player].x1 = (newWidth/orgWidth) * positions[player].x1
-            positions[player].x2 = (newWidth/orgWidth) * positions[player].x2
-            positions[player].y1 = (newHeight/orgHeight) * positions[player].y1
-            positions[player].y2 = (newHeight/orgHeight) * positions[player].y2
-          })
-            this.setState( { position: positions , width :window.innerWidth, height: window.innerHeight})
-      }
-    */
-
     //client set timer, at this moment only used to simulate key events
 
   }, {
@@ -607,19 +568,9 @@ var Editor = function (_React$Component) {
     key: 'closeMenuWin',
     value: function closeMenuWin(e) {
       console.log("closing context");
+      //window.addEventListener('keydown', self.handleKeyDown, false); //Enable keypress (delete button) in normal operational mode
       this.setState({ contextMenu: false });
-      //this.refs.modal.hide();
     }
-
-    /*
-      //handle changes within context menu
-      handleContextChange(e) {
-        var stateCopy = Object.assign({}, this.state);
-        var so = stateCopy.selectedObject
-        so.name = e.target.value
-        this.setState(stateCopy);
-      }
-    */
 
     //click with editor received.
 
@@ -639,6 +590,9 @@ var Editor = function (_React$Component) {
       stateCopy.selectedObject = selectedObject;
       this.setState(stateCopy);
     }
+
+    //Render actually shows the editor frontend. First we will define some utility functions
+
   }, {
     key: 'render',
     value: function render() {
@@ -705,6 +659,8 @@ var Editor = function (_React$Component) {
       };
 
       //Based on the connection object render the connection lines and triangle
+      //So each connection has 2 lines always, and a image (triangle) we used to show an arrow
+      //The lines and triangle are determined based on the 2 possible connection modes , based on left or right corner.
       var getConnection = function getConnection(obj, index) {
         if (obj["corner"] == "right") {
           return _react2.default.createElement(
@@ -742,12 +698,16 @@ var Editor = function (_React$Component) {
 
         var contextMenu;
         if (self.state.contextMenu == true) {
+          //We for this moment will alway assume we open the context menu for a Kafka object
+          socket.emit('clientmessage', { type: "connectKafkaConsumer", zooKeeper: "52.209.29.218:2181/", topic: "ciss" });
+
           contextMenu = _react2.default.createElement(
             'div',
             { id: 'someid' },
             _react2.default.createElement(_ContextDialog2.default, { key: 'contextmenu',
               onClick: self.closeMenuWin,
               onChange: self.onChangeSelectedObject,
+              socket: socket,
               selectedObject: self.state.selectedObject,
               visible: true })
           );
@@ -757,6 +717,9 @@ var Editor = function (_React$Component) {
 
       var self = this;
 
+      //First draw all connections (lines), then all objects (images), and finally the object text directly under the images so their appear first
+      //The ContextMenu function will be called, which will show a popup dialog in case the state of the editor is in context mode after
+      //Clicking the right mouse on top of an object
       return _react2.default.createElement(
         'div',
         { onClick: this.clickBtn, className: 'Editor', id: 'editor' },

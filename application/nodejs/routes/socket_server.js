@@ -1,5 +1,62 @@
 var io = require('socket.io');
 
+//Kafka consumer init , code for connecting to a KAfka server, at this moment hard coded to a kafka poc server in aws (todo change within app)
+
+var kafka = require('kafka-node');
+var Client = kafka.Client;
+var Consumer = kafka.Consumer;
+var Offset = kafka.Offset;
+
+function getTopics(zooKeeper) {
+    let client = new Client(zooKeeper);
+
+    //error : BrokerNotAvailableError: Broker not available
+    //client.loadMetadataForTopics(['ciss'], function (error, results) {
+    //  console.log("results : " + results);
+    //  console.log("error : " + error);
+    //});
+
+    client.loadMetadataForTopics(["ciss"], (err, resp) => {
+      console.log(JSON.stringify(err))
+      console.log(JSON.stringify(resp))
+  });
+
+
+}
+
+
+function createConsumer(myTopics,zooKeeper,socket) {
+    let client = new Client(zooKeeper);
+
+    let topics = [
+          {topic: myTopics, partition:0},
+      ],
+      options = { autoCommit: false, fromBeginning: false, fetchMaxWaitMs: 1000 };
+
+    let consumer = new Consumer(client, topics, options);
+    let offset = new Offset(client);
+    consumer.on('message', function (message) {
+        console.log("Kafka message received, sending it to client browser:" );
+        console.log(this.id, message);
+        socket.emit('serverevent', {type : "kafkamessage", message : message})
+
+    });
+    consumer.on('error', function (err) {
+        console.log('There was a kafka error', err);
+        socket.emit('serverevent', {type : "kafkamessage", message : err})
+    });
+    consumer.on('offsetOutOfRange', function (topic) {
+        topic.maxNum = 2;
+        offset.fetch([topic], function (err, offsets) {
+            var min = Math.min.apply(null, offsets[topic.topic][topic.partition]);
+            consumer.setOffset(topic.topic, topic.partition, min);
+        });
+    })
+}
+
+//End of Kafka code
+
+
 //Start the socket server
 exports.initialize = function(server) {
   io = io.listen(server);
@@ -22,10 +79,12 @@ exports.initialize = function(server) {
     socket.on('clientmessage', function(message){
 
           //A user sends a text message
-          if(message.type == "userMessage"){
-            console.log("The type of the event is a userMessage" );
-            //socket.emit('serverevent', {type : "servermessage", message : "The server says hi back"})
-            //socket.broadcast.emit('serverevent', {type : "servermessage", message : "Someone says hi to all"})
+          if(message.type == "connectKafkaConsumer"){
+            console.log("The type of the event recevied from browser is a connectKafkaConsumer" );
+
+            createConsumer(message.topic,message.zooKeeper,socket);
+            //getTopics(message.zooKeeper)
+
           }
 
           //After initial connect this will let the new user know its properties, were to start etc.

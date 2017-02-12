@@ -37,7 +37,7 @@ npm install --save babel-plugin-transform-decorators-legacy
 npm install react-simple-toolbar --save
 npm install --save-dev babel-preset-es2015-ie
 npm install --save-dev rodal (and reactify??)
-
+npm install react-list --save
 
 ```
 Notice we install socket.io in main directory for the client, later we also install it in nodejs subdirectory for
@@ -69,7 +69,7 @@ OR npm install kafka-node --no-optional --save
 From the Editor/application dir:
 ```
 babel js/source -d js/build
-NODE_ENV=production    (for production only, required for way better performance!)
+set / export NODE_ENV=production    (for production only, required for way better performance!)
 browserify js/build/app.js -o bundle.js
 LINUX: cat css/*/* css/*.css | sed 's/..\/..\/images/images/g' > bundle.css
 Windows: type css\components\* css\* > bundle.css

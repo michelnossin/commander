@@ -60,6 +60,7 @@ class Editor extends React.Component {
     this.closeMenuWin = this.closeMenuWin.bind(this) //close context dialog (properties for objects)
     this.clickBtn = this.clickBtn.bind(this) //global click handler for editor (not used)
     this.onChangeSelectedObject = this.onChangeSelectedObject.bind(this)  //Change within context dialog call this function (eg change obj name on the spot)
+    //this.onServerEvent = this.onServerEvent.bind(this) //Event from server, most likeyly socket event for a kafka message
 
     //receive event from server
     socket.on('serverevent', ev_msg => {
@@ -72,16 +73,10 @@ class Editor extends React.Component {
         //this.resetClient()
         console.log("Server handshake received by client")
       }
-    })
-  }
 
-/*
-  @keydown( 'enter' ) // or specify `which` code directly, in this case 13
-    submit( event ) {
-      // do something, or not, with the keydown event, maybe event.preventDefault()
-      console.log("YES")
-    }
-*/
+    })
+
+  }
 
   //Mouse is moved
   handleMouseMove  (e) {
@@ -205,18 +200,13 @@ class Editor extends React.Component {
       window.removeEventListener('mousemove', this.handleMouseMove, false);
       window.removeEventListener('keydown', this.handleKeyDown, false);
 */
+      //window.removeEventListener('keydown', this.handleKeyDown, false); //Temporaray disable keypress so delete button in dialog can be used
       this.setState({ contextMenu : true}) //This will make Render show some nice dialog
-      //this.forceUpdate()
 
-      //this.refs.modal.show();
       return true //Prevent context menu browser popup
 
     }
-
-
   }
-
-
 
   //Mouse is clicked down using left key
   handleLeftMouseDown  (e) {
@@ -246,17 +236,14 @@ class Editor extends React.Component {
           this.setState({ selectedObject : 0})
 
         }
-
     }
-
   }
+
   //Mouse is clicked up
   handleMouseUp  (e) {
     //console.log("Client used mouse up "  );
 
     if (this.state.contextMenu == true) {
-      //if (e.target.id == "contextclose")
-      //  this.closeMenuWin(e)
       return
     }
 
@@ -271,7 +258,6 @@ class Editor extends React.Component {
       else
         this.removeLastConnection()
 
-      //return
     }
     //Toolbar click ignore
     if (e.target.id == "toolbar")
@@ -291,16 +277,12 @@ class Editor extends React.Component {
         //if (this.selectObject(e.clientX,e.clientY) == 0) //Select object in case we clicked on it (or on a connection)
         if (this.state.selectedObject == 0)
           this.addObject(e.clientX,e.clientY)
-
-        }
+      }
     }
   }
 
-
   //keypress reveived
     handleKeyDown(event) {
-      //if (this.state.contextMenu == true) return
-      //console.log("Key press")
 
       if ( event ) {
         //Delete key
@@ -309,7 +291,6 @@ class Editor extends React.Component {
         }
     }
   }
-
 
   componentWillMount  () {
       let self = this
@@ -356,10 +337,8 @@ class Editor extends React.Component {
 
     }
 
-    //this.state.objects.map((obj,index) => {})
-    //this.state.connections.map((obj,index) => {})
-
   }
+
   //Is last connection between two objects valid? 0 = No , 1 = Yes
   isLastConnectionValid() {
     var stateCopy = Object.assign({}, this.state);
@@ -399,8 +378,7 @@ class Editor extends React.Component {
 
   //correct a given connection so its fits nicely between two objects. ano object can connec in 2 ways, so switch mode also
   correctConnection(c) {
-    //var stateCopy = Object.assign({}, this.state);
-    //var lastLine = stateCopy.connections[stateCopy.connections.length-1]
+
     if (c.x2 > c.x1 && c.y2 > c.y1) {
       if (c.corner == "left"){
         c.x1 = c.from.x
@@ -504,33 +482,6 @@ class Editor extends React.Component {
   }
 
 
-  //shouldComponentUpdate(nextProps, nextState) {
-  //  return false;
-  //}
-
-  //Call when windows resized.
-  /*
-  updateDimensions() {
-        let orgWidth = this.state.width
-        let orgHeight = this.state.height
-        console.log("Width and Height resize to " + String(window.innerWidth) + " and " + String(window.innerHeight)  );
-        let newWidth = window.innerWidth
-        let newHeight = window.innerHeight
-        //this.setState( { width :window.innerWidth, height: window.innerHeight })
-
-        var positions = Object.assign({},this.state.position)
-
-        Object.keys(positions).map((player,index) => {
-          positions[player].x1 = (newWidth/orgWidth) * positions[player].x1
-          positions[player].x2 = (newWidth/orgWidth) * positions[player].x2
-          positions[player].y1 = (newHeight/orgHeight) * positions[player].y1
-          positions[player].y2 = (newHeight/orgHeight) * positions[player].y2
-        })
-
-        this.setState( { position: positions , width :window.innerWidth, height: window.innerHeight})
-    }
-*/
-
   //client set timer, at this moment only used to simulate key events
   componentDidMount()  {
 
@@ -566,20 +517,9 @@ class Editor extends React.Component {
   //Close context menu
   closeMenuWin(e) {
       console.log("closing context")
+      //window.addEventListener('keydown', self.handleKeyDown, false); //Enable keypress (delete button) in normal operational mode
       this.setState({ contextMenu: false });
-      //this.refs.modal.hide();
-
     }
-
-/*
-  //handle changes within context menu
-  handleContextChange(e) {
-    var stateCopy = Object.assign({}, this.state);
-    var so = stateCopy.selectedObject
-    so.name = e.target.value
-    this.setState(stateCopy);
-  }
-*/
 
   //click with editor received.
   clickBtn(e) {
@@ -592,10 +532,10 @@ class Editor extends React.Component {
     var stateCopy = Object.assign({}, this.state);
     stateCopy.selectedObject = selectedObject
     this.setState(stateCopy);
-
-
   }
 
+
+  //Render actually shows the editor frontend. First we will define some utility functions
   render() {
     var username=""
 
@@ -617,7 +557,6 @@ class Editor extends React.Component {
              break;
         }
         return result
-
      }
 
      //get pixel for text so we can add title on objects nicely centered
@@ -649,7 +588,6 @@ class Editor extends React.Component {
         else
           return "images/triangle-up.png"
       }
-
     }
 
     //Get object style, which is the same except when selected
@@ -673,6 +611,8 @@ class Editor extends React.Component {
     }
 
     //Based on the connection object render the connection lines and triangle
+    //So each connection has 2 lines always, and a image (triangle) we used to show an arrow
+    //The lines and triangle are determined based on the 2 possible connection modes , based on left or right corner.
     var getConnection = function(obj,index) {
       if (obj["corner"] == "right") {
          return (
@@ -710,10 +650,14 @@ class Editor extends React.Component {
 
       var contextMenu
       if (self.state.contextMenu == true) {
+        //We for this moment will alway assume we open the context menu for a Kafka object
+        socket.emit('clientmessage', {type : "connectKafkaConsumer", zooKeeper : "52.209.29.218:2181/" , topic : "ciss" })
+
         contextMenu = <div id="someid" >
                            <ContextDialog key="contextmenu"
                                       onClick={self.closeMenuWin}
                                       onChange={self.onChangeSelectedObject}
+                                      socket={socket}
                                       selectedObject={self.state.selectedObject}
                                       visible={true} />
                       </div>
@@ -721,9 +665,11 @@ class Editor extends React.Component {
       return contextMenu
     }
 
-
     let self=this
 
+    //First draw all connections (lines), then all objects (images), and finally the object text directly under the images so their appear first
+    //The ContextMenu function will be called, which will show a popup dialog in case the state of the editor is in context mode after
+    //Clicking the right mouse on top of an object
     return (
       <div onClick={this.clickBtn} className="Editor" id="editor" >
       {
