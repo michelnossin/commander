@@ -18,13 +18,8 @@ class ContextDialog extends React.Component {
             console.log(ev_msg.message.value)
             var stateCopy = Object.assign({}, this.state);
             var messages = stateCopy.messages.push(ev_msg.message.value)
-            //console.log("messages FOR: " + messages)
-            //if (messages.length > 15)
-            //stateCopy.messages = stateCopy.messages.slice(-15)
-            //console.log("messages after: " + stateCopy.messages)
             this.setState(stateCopy);
-            this.list.scrollTo(30);
-
+            this.list.scrollTo(this.state.messages.length);
 
 
           }
@@ -38,7 +33,7 @@ class ContextDialog extends React.Component {
     }
 
     hide() {
-        this.list = null
+        //this.list = []
         this.setState({ visible: false });
         this.props.onClick()
     }
@@ -51,16 +46,11 @@ class ContextDialog extends React.Component {
 
       this.props.onChange(this.state.selectedObject)
     }
-//    handleClick(e) {
-//        console.log('this is:', e.target.id);
-//      }
 
       renderItem(index, key) {
         //console.log("index : " + index)
         let self=this
-        //index = self.state.messages.length - 50 + index + (50 - self.state.messages.length)
-        //key = index
-        //console.log("rendering to: " + index)
+
         return <div key={key}>{self.state.messages[index]}</div>;
       }
 
@@ -72,11 +62,7 @@ class ContextDialog extends React.Component {
         let myBtn = (<button id="closebtn" onClick={this.props.onClick} >Close Dialog</button>)
         let objName = (<input id="objname" type="text" value={this.state.selectedObject.name}
                               onChange={this.onHandleChange.bind(this)} />)
-        let eventList = (<ReactList itemRenderer={self.renderItem} length={30} type='uniform' ref={c => self.list = c} />)
-
-        //var myChild = React.renderComponent(eventList);
-        //eventList.scrollTo(self.state.messages.length)
-        //eventList.scrollTo(self.state.messages.length)
+        let eventList = (<ReactList itemRenderer={self.renderItem} length={self.state.messages.length} type='simple' ref={c => self.list = c} />)
 
         return (
             <div>
@@ -95,24 +81,6 @@ class ContextDialog extends React.Component {
         )
       }
 
-//ref={(child) => { child.scrollTo(self.state.messages.length); }}
-
 }
-
-/*
-<div style={{overflow: 'auto', maxHeight: 400}}>
-          <ReactList
-            itemRenderer={::this.renderItem}
-            length={this.state.accounts.length}
-            type='uniform'
-          />
-        </div>
-
-        {
-        this.state.messages.map((msg,index) => (
-          <div>{msg}</div>
-        ))}
-*/
-
 
 export default ContextDialog;

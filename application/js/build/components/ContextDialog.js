@@ -46,12 +46,8 @@ var ContextDialog = function (_React$Component) {
                 console.log(ev_msg.message.value);
                 var stateCopy = Object.assign({}, _this.state);
                 var messages = stateCopy.messages.push(ev_msg.message.value);
-                //console.log("messages FOR: " + messages)
-                //if (messages.length > 15)
-                //stateCopy.messages = stateCopy.messages.slice(-15)
-                //console.log("messages after: " + stateCopy.messages)
                 _this.setState(stateCopy);
-                _this.list.scrollTo(30);
+                _this.list.scrollTo(_this.state.messages.length);
             }
         });
 
@@ -66,7 +62,7 @@ var ContextDialog = function (_React$Component) {
     }, {
         key: 'hide',
         value: function hide() {
-            this.list = null;
+            //this.list = []
             this.setState({ visible: false });
             this.props.onClick();
         }
@@ -80,18 +76,12 @@ var ContextDialog = function (_React$Component) {
 
             this.props.onChange(this.state.selectedObject);
         }
-        //    handleClick(e) {
-        //        console.log('this is:', e.target.id);
-        //      }
-
     }, {
         key: 'renderItem',
         value: function renderItem(index, key) {
             //console.log("index : " + index)
             var self = this;
-            //index = self.state.messages.length - 50 + index + (50 - self.state.messages.length)
-            //key = index
-            //console.log("rendering to: " + index)
+
             return _react2.default.createElement(
                 'div',
                 { key: key },
@@ -111,13 +101,9 @@ var ContextDialog = function (_React$Component) {
             );
             var objName = _react2.default.createElement('input', { id: 'objname', type: 'text', value: this.state.selectedObject.name,
                 onChange: this.onHandleChange.bind(this) });
-            var eventList = _react2.default.createElement(_reactList2.default, { itemRenderer: self.renderItem, length: 30, type: 'uniform', ref: function ref(c) {
+            var eventList = _react2.default.createElement(_reactList2.default, { itemRenderer: self.renderItem, length: self.state.messages.length, type: 'simple', ref: function ref(c) {
                     return self.list = c;
                 } });
-
-            //var myChild = React.renderComponent(eventList);
-            //eventList.scrollTo(self.state.messages.length)
-            //eventList.scrollTo(self.state.messages.length)
 
             return _react2.default.createElement(
                 'div',
@@ -143,27 +129,9 @@ var ContextDialog = function (_React$Component) {
                 )
             );
         }
-
-        //ref={(child) => { child.scrollTo(self.state.messages.length); }}
-
     }]);
 
     return ContextDialog;
 }(_react2.default.Component);
-
-/*
-<div style={{overflow: 'auto', maxHeight: 400}}>
-          <ReactList
-            itemRenderer={::this.renderItem}
-            length={this.state.accounts.length}
-            type='uniform'
-          />
-        </div>
-
-        {
-        this.state.messages.map((msg,index) => (
-          <div>{msg}</div>
-        ))}
-*/
 
 exports.default = ContextDialog;
