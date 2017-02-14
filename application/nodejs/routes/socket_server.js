@@ -11,19 +11,19 @@ var clientConnected = null
 function getTopics(zooKeeper) {
     let client = new Client(zooKeeper);
 
-    //error : BrokerNotAvailableError: Broker not available
-    //client.loadMetadataForTopics(['ciss'], function (error, results) {
-    //  console.log("results : " + results);
-    //  console.log("error : " + error);
-    //});
+    client.on('connect', function (message) {
+        console.log("client connect for topic" );
 
-    client.loadMetadataForTopics(["ciss"], (err, resp) => {
-      console.log(JSON.stringify(err))
-      console.log(JSON.stringify(resp))
-  });
+        client.loadMetadataForTopics([], (err, resp) => {
+          //console.log(JSON.stringify(err))
+          console.log(JSON.stringify(resp))
+      });
 
+    });
 
 }
+
+getTopics("52.209.29.218:2181/")
 
 function createClient(zooKeeper) {
   clientConnected = new Client(zooKeeper)
