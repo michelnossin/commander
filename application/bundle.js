@@ -262,12 +262,12 @@ var ContextDialog = function (_React$Component) {
         //receive event from server
         _this.props.socket.on('serverevent', function (ev_msg) {
             if (ev_msg.type == 'kafkamessage') {
-                console.log("topic message via kafkia was received");
+                console.log("topic message via kafkia was received: " + ev_msg.message.value);
                 console.log(ev_msg.message.value);
                 var stateCopy = Object.assign({}, _this.state);
                 var messages = stateCopy.messages.push(ev_msg.message.value);
                 _this.setState(stateCopy);
-                _this.list.scrollTo(_this.state.messages.length);
+                if (_this.list) _this.list.scrollTo(_this.state.messages.length);
             }
         });
 

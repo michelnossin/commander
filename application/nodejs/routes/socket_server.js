@@ -6,6 +6,7 @@ var kafka = require('kafka-node');
 var Client = kafka.Client;
 var Consumer = kafka.Consumer;
 var Offset = kafka.Offset;
+var clientConnected = null
 
 function getTopics(zooKeeper) {
     let client = new Client(zooKeeper);
@@ -24,9 +25,11 @@ function getTopics(zooKeeper) {
 
 }
 
+function createClient(zooKeeper) {
+  clientConnected = new Client(zooKeeper)
+}
 
-function createConsumer(myTopics,zooKeeper,socket) {
-    let client = new Client(zooKeeper);
+function createConsumer(client, myTopics,socket) {
 
     let topics = [
           {topic: myTopics, partition:0},
@@ -82,7 +85,9 @@ exports.initialize = function(server) {
           if(message.type == "connectKafkaConsumer"){
             console.log("The type of the event recevied from browser is a connectKafkaConsumer" );
 
-            createConsumer(message.topic,message.zooKeeper,socket);
+            if (clientConnected == null) createClient(message.zooKeeper)
+
+            if (clientConnected != null) createConsumer(clientConnected ,message.topic,socket);
             //getTopics(message.zooKeeper)
 
           }

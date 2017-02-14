@@ -14,14 +14,12 @@ class ContextDialog extends React.Component {
         //receive event from server
         this.props.socket.on('serverevent', ev_msg => {
           if (ev_msg.type == 'kafkamessage') {
-            console.log("topic message via kafkia was received")
+            console.log("topic message via kafkia was received: " + ev_msg.message.value)
             console.log(ev_msg.message.value)
             var stateCopy = Object.assign({}, this.state);
             var messages = stateCopy.messages.push(ev_msg.message.value)
             this.setState(stateCopy);
-            this.list.scrollTo(this.state.messages.length);
-
-
+            if (this.list) this.list.scrollTo(this.state.messages.length);
           }
         })
 
