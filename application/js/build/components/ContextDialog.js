@@ -1,7 +1,7 @@
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -26,112 +26,162 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+/*
+[
+ {"0":
+   {"nodeId":0,
+   "host":"ec2-52-209-29-218.eu-west-1.compute.amazonaws.com",
+   "port":9092
+   }
+ },
+ {"metadata":
+   {"ciss":
+     {"0":
+       {"topic": "ciss",
+       "partition":0,
+       "leader":0,
+       "replicas":[0],
+       "isr":[0]
+       }
+     }
+   }
+ }
+]
+*/
+
 var ContextDialog = function (_React$Component) {
-    _inherits(ContextDialog, _React$Component);
+  _inherits(ContextDialog, _React$Component);
 
-    function ContextDialog(props) {
-        _classCallCheck(this, ContextDialog);
+  function ContextDialog(props) {
+    _classCallCheck(this, ContextDialog);
 
-        var _this = _possibleConstructorReturn(this, (ContextDialog.__proto__ || Object.getPrototypeOf(ContextDialog)).call(this, props));
+    var _this = _possibleConstructorReturn(this, (ContextDialog.__proto__ || Object.getPrototypeOf(ContextDialog)).call(this, props));
 
-        _this.renderItem = _this.renderItem.bind(_this);
+    _this.renderItem = _this.renderItem.bind(_this);
 
-        _this.state = { visible: props.visible, selectedObject: props.selectedObject,
-            messages: [] };
+    _this.state = { visible: props.visible, selectedObject: props.selectedObject,
+      messages: [], topics: [] };
 
-        //receive event from server
-        _this.props.socket.on('serverevent', function (ev_msg) {
-            if (ev_msg.type == 'kafkamessage') {
-                console.log("topic message via kafkia was received: " + ev_msg.message.value);
-                console.log(ev_msg.message.value);
-                var stateCopy = Object.assign({}, _this.state);
-                var messages = stateCopy.messages.push(ev_msg.message.value);
-                _this.setState(stateCopy);
-                if (_this.list) _this.list.scrollTo(_this.state.messages.length);
+    //receive event from server
+    _this.props.socket.on('serverevent', function (ev_msg) {
+      if (ev_msg.type == 'kafkamessage') {
+        console.log("topic message via kafkia was received: " + ev_msg.message.value);
+        console.log(ev_msg.message.value);
+        var stateCopy = Object.assign({}, _this.state);
+        var messages = stateCopy.messages.push(ev_msg.message.value);
+        _this.setState(stateCopy);
+        if (_this.list) _this.list.scrollTo(_this.state.messages.length);
+      } else if (ev_msg.type == 'kafkatopics') {
+
+        var stateCopy = Object.assign({}, _this.state);
+        var len = ev_msg.message.length;
+        for (var i = 0; i < len; i++) {
+          Object.keys(ev_msg.message[i]).map(function (keys, index) {
+            //for (var topic in Object.keys(ev_msg.message[i])) {
+            //var topics = stateCopy.topics.push(keys)
+            if (keys == "metadata") {
+              Object.keys(ev_msg.message[i].metadata).map(function (topics, index) {
+                var topics = stateCopy.topics.push(topics);
+              });
             }
-        });
+            //}
+          });
+        }
+        _this.setState(stateCopy);
+      }
+    });
+    return _this;
+  }
 
-        return _this;
+  _createClass(ContextDialog, [{
+    key: 'show',
+    value: function show() {
+      this.setState({ visible: true });
     }
+  }, {
+    key: 'hide',
+    value: function hide() {
+      //this.list = []
+      this.setState({ visible: false });
+      this.props.onClick();
+    }
+  }, {
+    key: 'onHandleChange',
+    value: function onHandleChange(e) {
+      var stateCopy = Object.assign({}, this.state);
 
-    _createClass(ContextDialog, [{
-        key: 'show',
-        value: function show() {
-            this.setState({ visible: true });
-        }
-    }, {
-        key: 'hide',
-        value: function hide() {
-            //this.list = []
-            this.setState({ visible: false });
-            this.props.onClick();
-        }
-    }, {
-        key: 'onHandleChange',
-        value: function onHandleChange(e) {
-            var stateCopy = Object.assign({}, this.state);
+      stateCopy.selectedObject.name = e.target.value;
+      this.setState(stateCopy);
 
-            stateCopy.selectedObject.name = e.target.value;
-            this.setState(stateCopy);
+      this.props.onChange(this.state.selectedObject);
+    }
+  }, {
+    key: 'renderItem',
+    value: function renderItem(index, key) {
+      //console.log("index : " + index)
+      var self = this;
 
-            this.props.onChange(this.state.selectedObject);
-        }
-    }, {
-        key: 'renderItem',
-        value: function renderItem(index, key) {
-            //console.log("index : " + index)
-            var self = this;
+      return _react2.default.createElement(
+        'div',
+        { key: key },
+        self.state.messages[index]
+      );
+    }
+  }, {
+    key: 'render',
+    value: function render() {
 
-            return _react2.default.createElement(
-                'div',
-                { key: key },
-                self.state.messages[index]
-            );
-        }
-    }, {
-        key: 'render',
-        value: function render() {
+      var self = this;
 
-            var self = this;
+      var myBtn = _react2.default.createElement(
+        'button',
+        { id: 'closebtn', onClick: this.props.onClick },
+        'Close Dialog'
+      );
+      var objName = _react2.default.createElement('input', { id: 'objname', type: 'text', value: this.state.selectedObject.name,
+        onChange: this.onHandleChange.bind(this) });
+      var eventList = _react2.default.createElement(_reactList2.default, { itemRenderer: self.renderItem, length: self.state.messages.length, type: 'simple', ref: function ref(c) {
+          return self.list = c;
+        } });
+      //let topicList = ({self.state.topics}</h4>)
+      return _react2.default.createElement(
+        'div',
+        null,
+        _react2.default.createElement(
+          _rodal2.default,
+          {
+            customStyles: { position: "absolute", top: this.state.selectedObject.y + 'px', left: this.state.selectedObject.x + 'px' },
+            visible: this.state.visible, onClose: this.hide.bind(this) },
+          _react2.default.createElement(
+            'div',
+            null,
+            _react2.default.createElement(
+              'p',
+              null,
+              'Name: ',
+              objName,
+              ' ',
+              myBtn
+            ),
+            _react2.default.createElement(
+              'p',
+              null,
+              'Topic: ',
+              this.state.topics
+            ),
+            _react2.default.createElement(
+              'div',
+              { style: { height: 200, overflow: 'scroll' } },
+              'Monitor events:',
+              eventList
+            )
+          )
+        )
+      );
+    }
+  }]);
 
-            var myBtn = _react2.default.createElement(
-                'button',
-                { id: 'closebtn', onClick: this.props.onClick },
-                'Close Dialog'
-            );
-            var objName = _react2.default.createElement('input', { id: 'objname', type: 'text', value: this.state.selectedObject.name,
-                onChange: this.onHandleChange.bind(this) });
-            var eventList = _react2.default.createElement(_reactList2.default, { itemRenderer: self.renderItem, length: self.state.messages.length, type: 'simple', ref: function ref(c) {
-                    return self.list = c;
-                } });
-
-            return _react2.default.createElement(
-                'div',
-                null,
-                _react2.default.createElement(
-                    _rodal2.default,
-                    {
-                        customStyles: { position: "absolute", top: this.state.selectedObject.y + 'px', left: this.state.selectedObject.x + 'px' },
-                        visible: this.state.visible, onClose: this.hide.bind(this) },
-                    _react2.default.createElement(
-                        'div',
-                        null,
-                        'Name: ',
-                        objName,
-                        ' ',
-                        myBtn,
-                        _react2.default.createElement(
-                            'div',
-                            { style: { height: 200, overflow: 'scroll' } },
-                            eventList
-                        )
-                    )
-                )
-            );
-        }
-    }]);
-
-    return ContextDialog;
+  return ContextDialog;
 }(_react2.default.Component);
 
 exports.default = ContextDialog;

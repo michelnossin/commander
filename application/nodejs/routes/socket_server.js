@@ -8,27 +8,32 @@ var Consumer = kafka.Consumer;
 var Offset = kafka.Offset;
 var clientConnected = null
 
-function getTopics(zooKeeper) {
-    let client = new Client(zooKeeper);
-
+//Ask Kafka client to show topics , will be send to socket browser
+function getTopics(client,socket) {
+    //let client = new Client(zooKeeper);
     client.on('connect', function (message) {
-        console.log("client connect for topic" );
+        console.log("kafka cliented connect for topic retrieval" );
 
         client.loadMetadataForTopics([], (err, resp) => {
           //console.log(JSON.stringify(err))
-          console.log(JSON.stringify(resp))
+          //result = JSON.stringify(resp)
+          result=resp
+          socket.emit('serverevent', {type : "kafkatopics", message : result})
+          //console.log("topics list send to socket, browser client: " + result)
+
       });
 
     });
 
 }
 
-getTopics("52.209.29.218:2181/")
-
-function createClient(zooKeeper) {
+//Create , and keep open, a kafka client. Which can be used to create consumer or producer
+function createClient(zooKeeper,socket) {
   clientConnected = new Client(zooKeeper)
+  getTopics(clientConnected,socket)
 }
 
+//Create Kafka consumer
 function createConsumer(client, myTopics,socket) {
 
     let topics = [
@@ -36,6 +41,7 @@ function createConsumer(client, myTopics,socket) {
       ],
       options = { autoCommit: false, fromBeginning: false, fetchMaxWaitMs: 1000 };
 
+    //let consumer = new Consumer(client, topics, options);
     let consumer = new Consumer(client, topics, options);
     let offset = new Offset(client);
     consumer.on('message', function (message) {
@@ -85,10 +91,12 @@ exports.initialize = function(server) {
           if(message.type == "connectKafkaConsumer"){
             console.log("The type of the event recevied from browser is a connectKafkaConsumer" );
 
-            if (clientConnected == null) createClient(message.zooKeeper)
-
-            if (clientConnected != null) createConsumer(clientConnected ,message.topic,socket);
-            //getTopics(message.zooKeeper)
+            //Client is required for any interaction
+            if (clientConnected == null) createClient(message.zooKeeper,socket)
+            //if (clientConnected != null) {
+            //  createConsumer(clientConnected ,message.topic,socket);
+            //  getTopics(clientConnected,socket) //Retreive topic list and send to browser in socket
+            //}
 
           }
 
