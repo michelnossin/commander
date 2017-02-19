@@ -39,7 +39,7 @@ function createConsumer(client, myTopics,socket) {
     let topics = [
           {topic: myTopics, partition:0},
       ],
-      options = { autoCommit: false, fromBeginning: false, fetchMaxWaitMs: 1000 };
+      options = { autoCommit: true, fromOffset: false, fetchMaxWaitMs: 1000 }; //options = { autoCommit: false, fromBeginning: false, fetchMaxWaitMs: 1000 };
 
     //let consumer = new Consumer(client, topics, options);
     let consumer = new Consumer(client, topics, options);
@@ -93,13 +93,16 @@ exports.initialize = function(server) {
 
             //Client is required for any interaction
             if (clientConnected == null) createClient(message.zooKeeper,socket)
-            //if (clientConnected != null) {
-            //  createConsumer(clientConnected ,message.topic,socket);
-            //  getTopics(clientConnected,socket) //Retreive topic list and send to browser in socket
-            //}
-
           }
-
+          if(message.type == "disconnectKafkaConsumer"){
+            console.log("Client wants server to disconnect Kafka client" );
+            if (clientConnected != null) {
+              clientConnected.close(function() {
+                console.log("Client was disconnected")
+                clientConnected = null
+              })
+            }
+          }
           //After initial connect this will let the new user know its properties, were to start etc.
           else if(message.type == "userHandshake"){
             //console.log("At time " + counter + " the user " + message.user + " wants to play. Adding to slot and reply with handshake");

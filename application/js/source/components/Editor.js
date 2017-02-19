@@ -651,7 +651,7 @@ class Editor extends React.Component {
       var contextMenu
       if (self.state.contextMenu == true) {
         //We for this moment will alway assume we open the context menu for a Kafka object
-        socket.emit('clientmessage', {type : "connectKafkaConsumer", zooKeeper : "52.209.29.218:2181/" , topic : "ciss" })
+        //socket.emit('clientmessage', {type : "connectKafkaConsumer", zooKeeper : "52.209.29.218:2181/" , topic : "ciss" })
 
         contextMenu = <div id="someid" >
                            <ContextDialog key="contextmenu"

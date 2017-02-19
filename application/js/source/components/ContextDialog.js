@@ -1,6 +1,11 @@
 import React from 'react';
 import Rodal from 'rodal';
 import ReactList from 'react-list';
+import Select from 'react-select';
+
+
+//import 'react-select/dist/react-select.css'; //File is copied to css/components
+//Which will be put in build.css by our build script
 
 /*
 [
@@ -31,9 +36,14 @@ class ContextDialog extends React.Component {
     constructor(props) {
         super(props);
         this.renderItem = this.renderItem.bind(this)
+        this.changeTopic = this.changeTopic.bind(this)
 
         this.state = { visible: props.visible , selectedObject: props.selectedObject,
-                      messages: [], topics : [] };
+                      messages: [], topics : [] , selectedTopic : "" };
+
+        //Create Kafka consumer
+        this.props.socket.emit('clientmessage', {type : "connectKafkaConsumer", zooKeeper : "52.209.29.218:2181/"  }) //, topic : "ciss"
+
 
         //receive event from server
         this.props.socket.on('serverevent', ev_msg => {
@@ -46,24 +56,34 @@ class ContextDialog extends React.Component {
             if (this.list) this.list.scrollTo(this.state.messages.length);
           }
           else if (ev_msg.type == 'kafkatopics') {
+            console.log("topics list received from server")
 
             var stateCopy = Object.assign({}, this.state);
+            stateCopy.topics = []  //Reset any values in the topics list , we will receive a new updated list now.
             let len = ev_msg.message.length;
             for (var i = 0; i < len; i++) {
               Object.keys(ev_msg.message[i]).map((keys,index) => {
-              //for (var topic in Object.keys(ev_msg.message[i])) {
-                //var topics = stateCopy.topics.push(keys)
                 if (keys == "metadata") {
-                  Object.keys(ev_msg.message[i].metadata).map((topics,index) => {
-                    var topics = stateCopy.topics.push(topics)
+                  Object.keys(ev_msg.message[i].metadata).map((tp,index) => {
+                    let topic = { value: tp, label: tp }
+                    var topics = stateCopy.topics.push(topic)
                   })
                 }
-              //}
               })
             }
             this.setState(stateCopy);
           }
         })
+    }
+
+    changeTopic(topic) {
+        console.log("Selected: " + topic);
+        this.setState({selectedTopic : topic})
+    }
+
+    //Dialog is closing
+    componentWillUnmount() {
+      this.props.socket.emit('clientmessage', {type : "disconnectKafkaConsumer" })
     }
 
 
@@ -102,16 +122,18 @@ class ContextDialog extends React.Component {
         let objName = (<input id="objname" type="text" value={this.state.selectedObject.name}
                               onChange={this.onHandleChange.bind(this)} />)
         let eventList = (<ReactList itemRenderer={self.renderItem} length={self.state.messages.length} type='simple' ref={c => self.list = c} />)
-        //let topicList = ({self.state.topics}</h4>)
+        //let topicList = ({self.state.topics}</h4>)  //this.state.topics
+        let topicList = (<Select name="form-field-name" value={this.state.selectedTopic} options={self.state.topics} onChange={self.changeTopic} />)
+
         return (
             <div>
                 <Rodal
-                  customStyles={{position: "absolute", top: (this.state.selectedObject.y) + 'px', left: (this.state.selectedObject.x) + 'px'}}
+                  customStyles={{position: "absolute", height: "430px", top: (this.state.selectedObject.y) + 'px', left: (this.state.selectedObject.x) + 'px'}}
                   visible={this.state.visible} onClose={this.hide.bind(this)}>
                   <div >
                       <p>Name: {objName} {myBtn}</p>
-                      <p>Topic: {this.state.topics}</p>
-                      <div style={{height: 200, overflow: 'scroll'}}>
+                      <p>Topic: {topicList}</p>
+                      <div style={{height: 300, overflow: 'scroll'}}>
                       Monitor events:
                         {eventList}
                       </div>

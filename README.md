@@ -38,6 +38,7 @@ npm install react-simple-toolbar --save
 npm install --save-dev babel-preset-es2015-ie
 npm install --save-dev rodal (and reactify??)
 npm install react-list --save
+npm install react-select --save
 
 ```
 Notice we install socket.io in main directory for the client, later we also install it in nodejs subdirectory for
