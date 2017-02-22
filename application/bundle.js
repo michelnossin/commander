@@ -266,7 +266,9 @@ var ContextDialog = function (_React$Component) {
 
         //Create Kafka consumer
         _this.props.socket.emit('clientmessage', { type: "connectKafkaConsumer", zooKeeper: "52.209.29.218:2181/" }); //, topic : "ciss"
-
+        if (props.selectedObject.topic != "") {
+            _this.props.socket.emit('clientmessage', { type: "startConsumeTopic", topic: props.selectedObject.topic.value, zooKeeper: "52.209.29.218:2181/" });
+        }
 
         //receive event from server
         _this.props.socket.on('serverevent', function (ev_msg) {
@@ -308,8 +310,18 @@ var ContextDialog = function (_React$Component) {
             console.log("Selected: " + topic);
             this.setState({ selectedTopic: topic });
             this.state.selectedObject.topic = topic;
-            this.props.socket.emit('clientmessage', { type: "startConsumeTopic", topic: topic.value });
+            this.props.socket.emit('clientmessage', { type: "startConsumeTopic", topic: topic.value, zooKeeper: "52.209.29.218:2181/" });
         }
+
+        //Mounting
+
+    }, {
+        key: 'componentDidMount',
+        value: function componentDidMount() {}
+        //start reading messages if topic is set
+        //if (props.selectedObject.topic != "") {
+        //  this.props.socket.emit('clientmessage', {type : "startConsumeTopic", topic: props.selectedObject.topic.value })
+        //}
 
         //Dialog is closing
 

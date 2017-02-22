@@ -7,6 +7,7 @@ var Client = kafka.Client;
 var Consumer = kafka.Consumer;
 var Offset = kafka.Offset;
 var clientConnected = null
+var consumerConnected = null
 
 //Ask Kafka client to show topics , will be send to socket browser
 function getTopics(client,socket) {
@@ -55,6 +56,7 @@ function createConsumer(client, myTopics,socket) {
             consumer.setOffset(topic.topic, topic.partition, min);
         });
     })
+    consumerConnected = consumer
 }
 
 //End of Kafka code
@@ -63,12 +65,6 @@ function createConsumer(client, myTopics,socket) {
 //Start the socket server
 exports.initialize = function(server) {
   io = io.listen(server);
-  //io.sockets.emit('serverevent', {type : "resetclients"})
-  //socket.broadcast.emit('serverevent', {type : "removeUser", user: player})
-
-  //Loop needed?
-  //setInterval(function(){
-  //}, 10);  //10 ms loop (so 10* 1/1000th of a sec)
 
   //server receives connect event from client
   io.sockets.on("connection", function(socket){
@@ -91,27 +87,61 @@ exports.initialize = function(server) {
           else if(message.type == "disconnectKafkaConsumer"){
             console.log("Client wants server to disconnect Kafka client" );
             if (clientConnected != null) {
-              clientConnected.close(function() {
-                console.log("Client was disconnected")
-                clientConnected = null
-              })
+              if (consumerConnected != null) {
+                //End  consumer , commit is true
+                consumerConnected.close(true, function () {
+                  console.log("Consumer closed" );
+                  consumerConnected = null
+                  clientConnected.close(function() {
+                    console.log("Client was disconnected")
+                    clientConnected = null
+                  })
+                });
+              }
             }
           }
           else if(message.type == "startConsumeTopic"){
-            console.log("Client wants to consume a topic" );
+            console.log("Client wants to consume a topic: " + message.topic );
+            createClient(message.zooKeeper,socket)
+
             if (clientConnected != null) {
-              createConsumer(clientConnected, message.topic,socket)
+              console.log("KAfka client is already connected, starting consumer" );
+              if (consumerConnected != null) {
+                //End  consumer , commit is true
+                consumerConnected.close(true, function () {
+                  console.log("Closing existing consumer first, opening new" );
+                  consumerConnected = null
+                  createConsumer(clientConnected, message.topic,socket)
+                })
+              }
+              else {
+                console.log("New consumer creating" );
+                createConsumer(clientConnected, message.topic,socket)
+              }
             }
-          }
-          //After initial connect this will let the new user know its properties, were to start etc.
-          else if(message.type == "userHandshake"){
-            //console.log("At time " + counter + " the user " + message.user + " wants to play. Adding to slot and reply with handshake");
-            //socket.emit('serverevent', {type : "serverHandshake", user: newplayer})
-            //socket.broadcast.emit('serverevent', {type : "positions", players: players })
-            //socket.emit('serverevent', {type : "positions", players: players })
+            /*
+            else {
+              //No client anymore, create it
+              console.log("Client KAfka reconnecting" );
+              createClient(message.zooKeeper,socket)
+
+              if (consumerConnected != null) {
+                //End  consumer , commit is true
+                consumerConnected.close(true, function () {
+                  console.log("Closing existing consumer first, opening new" );
+                  consumerConnected = null
+                  createConsumer(clientConnected, message.topic,socket)
+                })
+              }
+              else {
+                console.log("New consumer creating" );
+                createConsumer(clientConnected, message.topic,socket)
+              }
+
+            }
+            */
 
           }
-
         });
 
   });
