@@ -3,34 +3,6 @@ import Rodal from 'rodal';
 import ReactList from 'react-list';
 import Select from 'react-select';
 
-
-//import 'react-select/dist/react-select.css'; //File is copied to css/components
-//Which will be put in build.css by our build script
-
-/*
-[
- {"0":
-   {"nodeId":0,
-   "host":"ec2-52-209-29-218.eu-west-1.compute.amazonaws.com",
-   "port":9092
-   }
- },
- {"metadata":
-   {"ciss":
-     {"0":
-       {"topic": "ciss",
-       "partition":0,
-       "leader":0,
-       "replicas":[0],
-       "isr":[0]
-       }
-     }
-   }
- }
-]
-*/
-
-
 class ContextDialog extends React.Component {
 
     constructor(props) {
@@ -39,7 +11,7 @@ class ContextDialog extends React.Component {
         this.changeTopic = this.changeTopic.bind(this)
 
         this.state = { visible: props.visible , selectedObject: props.selectedObject,
-                      messages: [], topics : [] , selectedTopic : "" };
+                      messages: [], topics : [] , selectedTopic : props.selectedObject.topic };
 
         //Create Kafka consumer
         this.props.socket.emit('clientmessage', {type : "connectKafkaConsumer", zooKeeper : "52.209.29.218:2181/"  }) //, topic : "ciss"
@@ -76,9 +48,12 @@ class ContextDialog extends React.Component {
         })
     }
 
+    //Called when changing combobox value filled with Kafka Topics
     changeTopic(topic) {
         console.log("Selected: " + topic);
         this.setState({selectedTopic : topic})
+        this.state.selectedObject.topic = topic
+        this.props.socket.emit('clientmessage', {type : "startConsumeTopic", topic: topic.value })
     }
 
     //Dialog is closing
@@ -97,6 +72,7 @@ class ContextDialog extends React.Component {
         this.props.onClick()
     }
 
+    //change title of an object
     onHandleChange(e) {
       var stateCopy = Object.assign({}, this.state);
 
@@ -106,6 +82,7 @@ class ContextDialog extends React.Component {
       this.props.onChange(this.state.selectedObject)
     }
 
+      //Show a single kafkamessage
       renderItem(index, key) {
         //console.log("index : " + index)
         let self=this

@@ -470,7 +470,7 @@ class Editor extends React.Component {
   //Add object in Editor
   addObject (x,y) {
     this.deselectAll()
-    this.state.objects.push({ name: "Change this" , x: x, y:y , objType : this.state.mode, selected : 0, connectedConnections : []})
+    this.state.objects.push({ name: "Change this" , topic: "" , x: x, y:y , objType : this.state.mode, selected : 0, connectedConnections : []})
     this.forceUpdate()
   }
   //Add connection between two objects

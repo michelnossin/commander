@@ -10,17 +10,11 @@ var clientConnected = null
 
 //Ask Kafka client to show topics , will be send to socket browser
 function getTopics(client,socket) {
-    //let client = new Client(zooKeeper);
     client.on('connect', function (message) {
         console.log("kafka cliented connect for topic retrieval" );
-
         client.loadMetadataForTopics([], (err, resp) => {
-          //console.log(JSON.stringify(err))
-          //result = JSON.stringify(resp)
           result=resp
           socket.emit('serverevent', {type : "kafkatopics", message : result})
-          //console.log("topics list send to socket, browser client: " + result)
-
       });
 
     });
@@ -94,13 +88,19 @@ exports.initialize = function(server) {
             //Client is required for any interaction
             if (clientConnected == null) createClient(message.zooKeeper,socket)
           }
-          if(message.type == "disconnectKafkaConsumer"){
+          else if(message.type == "disconnectKafkaConsumer"){
             console.log("Client wants server to disconnect Kafka client" );
             if (clientConnected != null) {
               clientConnected.close(function() {
                 console.log("Client was disconnected")
                 clientConnected = null
               })
+            }
+          }
+          else if(message.type == "startConsumeTopic"){
+            console.log("Client wants to consume a topic" );
+            if (clientConnected != null) {
+              createConsumer(clientConnected, message.topic,socket)
             }
           }
           //After initial connect this will let the new user know its properties, were to start etc.
