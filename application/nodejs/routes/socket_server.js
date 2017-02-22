@@ -82,7 +82,8 @@ exports.initialize = function(server) {
             console.log("The type of the event recevied from browser is a connectKafkaConsumer" );
 
             //Client is required for any interaction
-            if (clientConnected == null) createClient(message.zooKeeper,socket)
+            //if (clientConnected == null) 
+            createClient(message.zooKeeper,socket)
           }
           else if(message.type == "disconnectKafkaConsumer"){
             console.log("Client wants server to disconnect Kafka client" );
