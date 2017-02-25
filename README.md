@@ -14,7 +14,13 @@ Later on the real code will be added.
 # Install
 
 ## Reactjs install frontend
-Make sure you installs nodejs first which install npm, which you need. Make sure npm is in you PATH.
+Make sure you installs nodejs (We use version 6.9.1) first which install npm, which you need. Make sure npm is in you PATH.
+on AWS install aws like this:
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
+. ~/.nvm/nvm.sh
+nvm install 6.9.1   
+node -e "console.log('Running Node.js ' + process.version)"
+
 ```
 From main project (Editor) subdirectory "application" execute this:
 npm install
@@ -85,5 +91,31 @@ Goto http://localhost/commander  (show app directly)
 Goto http://localhost (shows website)
 ```
 
-For production, change the socket server ip, from localhost to your ip.
-Also you can minify the code. TODO describe how in a later stage.
+For production (on AWS):
+- change the socket server ip, from localhost to your ip (with Editor.js).
+- Also you can minify the code. TODO describe how in a later stage.
+- To start on port 80 (our default port for the socket server), for example on AWS we have to use sudo (as root is required):
+which node
+~/.nvm/versions/node/v6.9.1/bin/node
+[ec2-user@ip-172-31-46-19 nodejs]$ pwd
+/home/ec2-user/commander/application/nodejs
+sudo ~/.nvm/versions/node/v6.9.1/bin/node DataService.js
+
+- Also in nodejs/Dataservice change these Windows paths:
+//app.use(express.static(__dirname + "\\.."));
+    app.use(express.static(__dirname + "/.."));
+    if (!req.files)
+      res.sendFile(path.join(__dirname + "/../" + 'index.html'));
+      //res.sendFile(path.join(__dirname + "\\..\\" + 'index.html'));
+    else
+      res.sendFile(path.join(__dirname + "/../" + req.files));
+      //res.sendFile(path.join(__dirname + "\\..\\" + req.files));
+
+- Make s start script in $HOME : start_da.sh
+nohup sudo ~/.nvm/versions/node/v6.9.1/bin/node /home/ec2-user/commander/application/nodejs/DataService.js &
+
+Give execite privs:
+chmod 700 start_da.sh
+./start_da.sh
+
+- Test: http://<public-ip> in browser
